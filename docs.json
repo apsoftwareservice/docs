@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Pingmee",
   "colors": {
     "primary": "#16A34A",
     "light": "#07C983",
@@ -71,13 +71,13 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
+          "anchor": "Updates",
+          "href": "https://pingmee.co.il/updates/",
+          "icon": "newspaper"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
+          "anchor": "Academy",
+          "href": "https://pingmee.co.il/academy/",
           "icon": "newspaper"
         }
       ]
