@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "OpenAPI Plant Store",
+    "title": "Pingmee API",
     "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
     "license": {
       "name": "MIT"
@@ -10,38 +10,28 @@
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "https://api.pingmee.co.il"
     }
   ],
   "security": [
     {
-      "bearerAuth": []
+      "cookieAuth": [],
+      "ApiKeyAuth": []
     }
   ],
   "paths": {
-    "/plants": {
+    "/conversation/tags": {
       "get": {
-        "description": "Returns all plants from the system that the user has access to",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
+        "description": "Returns all conversation Tags",
         "responses": {
           "200": {
-            "description": "Plant response",
+            "description": "Conversation Tags",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Plant"
+                    "$ref": "#/components/schemas/ConversationTag"
                   }
                 }
               }
@@ -78,7 +68,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Plant"
+                  "$ref": "#/components/schemas/ConversationTag"
                 }
               }
             }
@@ -96,7 +86,7 @@
         }
       }
     },
-    "/plants/{id}": {
+    "/conversation/tags/{id}": {
       "delete": {
         "description": "Deletes a single plant based on the ID supplied",
         "parameters": [
@@ -127,53 +117,77 @@
             }
           }
         }
-      }
-    }
-  },
-  "webhooks": {
-    "/plant/webhook": {
-      "post": {
-        "description": "Information about a new plant added to the store",
-        "requestBody": {
-          "description": "Plant added to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
+      },
+      "get": {
+        "description": "Returns a conversation Tag",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of Tag to get",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation Tag",
+            "content": {
+              "application/json": {
+                "schema": {
+                    "$ref": "#/components/schemas/ConversationTag"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
-        },
-        "responses": {
-          "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
-          }
         }
       }
     }
   },
+
   "components": {
     "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
+      "ConversationTag": {
         "type": "object",
+        "required": [
+          "id",
+          "title",
+          "color",
+          "associatedTo"
+        ],
         "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the tag"
           },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
+          "title": {
+            "type": "string",
+            "description": "Human-readable tag title"
+          },
+          "color": {
+            "type": "string",
+            "description": "Tag color (hex, rgb, or named color)"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "NewPlant": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/Plant"
+            "$ref": "#/components/schemas/ConversationTag"
           },
           {
             "required": [
@@ -211,6 +225,16 @@
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer"
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Cookie"
+      },
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
       }
     }
   }

@@ -7,47 +7,9 @@
     "light": "#07C983",
     "dark": "#15803D"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.ico",
   "navigation": {
-    "tabs": [
-      {
-        "tab": "Guides",
-        "groups": [
-          {
-            "group": "Getting started",
-            "pages": [
-              "index",
-              "quickstart",
-              "development"
-            ]
-          },
-          {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
-            ]
-          }
-        ]
-      },
-      {
+    "tabs": [{
         "tab": "API reference",
         "groups": [
           {
@@ -57,12 +19,27 @@
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Tags",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/tags/get-all",
+              "api-reference/tags/get",
+              "api-reference/tags/create",
+              "api-reference/tags/delete"
+            ]
+          },
+          {
+            "group": "Messages",
+            "pages": [
+            ]
+          },
+          {
+            "group": "Conversation",
+            "pages": [
+            ]
+          },
+          {
+            "group": "Agents",
+            "pages": [
             ]
           }
         ]
@@ -91,13 +68,13 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:support@pingmee.co.il"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "label": "Home",
+      "href": "https://pingmee.co.il"
     }
   },
   "contextual": {

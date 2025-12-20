@@ -1,6 +1,6 @@
 ---
 title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+description: 'Working with Pingmee Micro Services'
 ---
 
 <Note>
@@ -8,26 +8,64 @@ description: 'Example section for showcasing API endpoints'
   this section by removing the api-reference folder.
 </Note>
 
-## Welcome
+## Authentication & Headers
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+Our platform is built using multiple **micro-services**.
+Each request **must include two required headers**:
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+- `x-api-key` – Service-specific API key
+- `Cookie` – Authentication token
 
-## Authentication
+### Required Headers
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+```http
+x-api-key: <service-api-key>
+Cookie: accessToken=<access-token>
+```
+
+Requests missing either header will be rejected.
+
+---
+
+## Base Services Configuration
+
+### AI Service
+
+- **Base URL:** `https://ai.pingmee.co.il`
+- **API Key:** `SnbCiZVY0S55DvXZEwmE295vhgnDut029MN2DlEI`
+
+### Business Service
+
+- **Base URL:** `https://business.pingmee.co.il`
+- **API Key:** `jqKOVsNTux5mCR4phcNIp95Ni7mwYewI812ulYWU`
+
+### Campaigns Service
+
+- **Base URL:** `https://campaigns.pingmee.co.il`
+- **API Key:** `cw2AXyZKZJ3VJt54JgNl32AZ3Sks4fkSd9Ry8Vc0`
+
+### Workflows Service
+
+- **Base URL:** `https://workflows.pingmee.co.il`
+- **API Key:** `SpPjikyFcD6tn1dFGwnHgaUSdcbBcNDG3mPideiF`
+
+### Core API
+
+- **Base URL:** `https://api.pingmee.co.il`
+- **API Key:** `qyDZiFKVUp1Hd1nHLDaDi9YK6Bb3gBAy23SYbG46`
+
+---
+
+## Example Headers Usage
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
+{
+  "headers": {
+    "Cookie": "accessToken=<token>",
+    "x-api-key": "<API Key>"
   }
-]
+}
 ```
+
+- `connection.apiKey` – User/session access token
+- `common.apiKey` – Micro-service API key
