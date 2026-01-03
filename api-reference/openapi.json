@@ -2,10 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Pingmee API",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
-    },
+    "description": "A complete guide to Pingmee micro service architecture.",
     "version": "1.0.0"
   },
   "servers": [
@@ -22,16 +19,21 @@
   "paths": {
     "/conversation/tags": {
       "get": {
-        "description": "Returns all conversation Tags",
+        "description": "Returns all conversation tags",
         "responses": {
           "200": {
             "description": "Conversation Tags",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ConversationTag"
+                  "type": "object",
+                  "properties": {
+                    "tags": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ConversationTag"
+                      }
+                    }
                   }
                 }
               }
@@ -50,13 +52,13 @@
         }
       },
       "post": {
-        "description": "Creates a new plant in the store",
+        "description": "Creates a new conversation tag",
         "requestBody": {
-          "description": "Plant to add to the store",
+          "description": "Conversation tag to create",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewPlant"
+                "$ref": "#/components/schemas/ConversationTag"
               }
             }
           },
@@ -64,7 +66,7 @@
         },
         "responses": {
           "200": {
-            "description": "plant response",
+            "description": "Conversation tag",
             "content": {
               "application/json": {
                 "schema": {
@@ -84,30 +86,54 @@
             }
           }
         }
+      },
+      "put": {
+        "description": "Conversation tag created",
+        "responses": {
+          "201": {
+            "description": "Conversation tag created"
+          }
+        }
       }
     },
     "/conversation/tags/{id}": {
       "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+        "description": "Deletes a conversation tag by id",
         "parameters": [
           {
             "name": "id",
             "in": "path",
-            "description": "ID of plant to delete",
+            "description": "ID of conversation tag to delete",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string"
             }
           }
         ],
         "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
+          "200": {
+            "description": "Conversation tag deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "success"
+                }
+              }
+            }
           },
           "400": {
             "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation tag not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -119,12 +145,12 @@
         }
       },
       "get": {
-        "description": "Returns a conversation Tag",
+        "description": "Returns a conversation tag",
         "parameters": [
           {
             "name": "id",
             "in": "path",
-            "description": "ID of Tag to get",
+            "description": "ID of conversation tag to get",
             "required": true,
             "schema": {
               "type": "string",
@@ -144,7 +170,224 @@
             }
           },
           "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation tag not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/customers": {
+      "servers": [
+        {
+          "url": "https://campaigns.pingmee.co.il",
+          "description": "Campaigns service"
+        }
+      ],
+      "post": {
+        "description": "Returns all customers using pagination",
+        "requestBody": {
+          "description": "Optionally provide pagination parameters to retrieve the next page of customers.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "lastEvaluatedKey": {
+                    "type": "object",
+                    "description": "Key returned from the previous request. Pass this value to fetch the next page of results.",
+                    "additionalProperties": true
+                  },
+                  "limit": {
+                    "type": "number",
+                    "default": 25,
+                    "minimum": 1,
+                    "maximum": 100,
+                    "description": "Maximum number of customers to return."
+                  }
+                }
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "Customers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "customers": {
+                      "type": "array",
+                      "description": "List of customers returned for this page of results.",
+                      "items": {
+                        "$ref": "#/components/schemas/Customer"
+                      }
+                    },
+                    "hasMoreItemsToFetch": {
+                      "type": "boolean"
+                    },
+                    "lastEvaluatedKey": {
+                      "type": "object",
+                      "description": "If present, call the same endpoint again and pass this value as `lastEvaluatedKey` to retrieve the next page of results. Pagination is cursor-based, not page-number based.",
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
             "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Creates new customers",
+        "requestBody": {
+          "description": "A list of customers to create",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomer"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Customers created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers/{id}": {
+      "servers": [
+        {
+          "url": "https://campaigns.pingmee.co.il",
+          "description": "Campaigns service"
+        }
+      ],
+      "delete": {
+        "description": "Deletes a single customer based on the ID supplied",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Phone number ID of the customer to delete.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Customer deleted",
+            "content": {}
+          },
+          "400": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Customer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Returns a Customer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Phone number ID of the customer to get",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Customer not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -180,29 +423,98 @@
           "color": {
             "type": "string",
             "description": "Tag color (hex, rgb, or named color)"
+          },
+          "associatedTo": {
+            "type": "string",
+            "description": "Business or account the tag is associated with"
           }
         },
         "additionalProperties": false
       },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ConversationTag"
+      "Customer": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "profileImage": {
+            "type": ["string", "null"],
+            "description": "Profile image URL if available"
           },
-          {
-            "required": [
-              "id"
-            ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
-              }
-            }
+          "customerName": {
+            "type": "string",
+            "description": "The name from WhatsApp or the originating platform"
+          },
+          "customerNickname": {
+            "type": "string",
+            "description": "The name the business gave the customer"
+          },
+          "createdAt": {
+            "type": "number",
+            "description": "Unix timestamp (milliseconds) when the customer was created"
+          },
+          "lastActiveAt": {
+            "type": "number",
+            "description": "Unix timestamp (milliseconds) when the customer was last active"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Customer email address"
+          },
+          "platform": {
+            "type": "string",
+            "enum": ["whatsapp", "instagram", "facebookMessenger"],
+            "description": "Messaging platform the customer is associated with"
+          },
+          "phoneNumberId": {
+            "type": "string",
+            "description": "Platform-specific phone number identifier"
+          },
+          "countryCode": {
+            "type": "string",
+            "description": "Country calling code"
+          },
+          "associatedTo": {
+            "type": "string",
+            "description": "Business or account the customer is associated with"
+          },
+          "parsedPhoneNumber": {
+            "type": "string",
+            "description": "Normalized phone number if available"
           }
-        ]
+        },
+        "additionalProperties": false
+      },
+      "CreateCustomer": {
+        "type": "object",
+        "required": [
+          "customerName",
+          "phoneNumberId",
+          "countryCode"
+        ],
+        "properties": {
+          "profileImage": {
+            "type": ["string", "null"],
+            "description": "Profile image URL if available, if not provided we try and find a matching profile picture for that phone number."
+          },
+          "customerName": {
+            "type": "string",
+            "description": "Customer full name"
+          },
+          "customerNickname": {
+            "type": "string",
+            "description": "Custom name to identify the customer in the business (not seen by the end user)"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Customer email address"
+          },
+          "phoneNumberId": {
+            "type": "string",
+            "description": "Phone number identifier including country code. (9725xxxxxxxx)"
+          }
+        },
+        "additionalProperties": false
       },
       "Error": {
         "required": [
@@ -212,8 +524,7 @@
         "type": "object",
         "properties": {
           "error": {
-            "type": "integer",
-            "format": "int32"
+            "type": "string"
           },
           "message": {
             "type": "string"

@@ -45,6 +45,10 @@
           {
             "group": "Customers",
             "pages": [
+              "api-reference/customers/get-all",
+              "api-reference/customers/get",
+              "api-reference/customers/create",
+              "api-reference/customers/delete"
             ]
           }
         ]
