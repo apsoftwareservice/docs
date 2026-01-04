@@ -164,7 +164,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                    "$ref": "#/components/schemas/ConversationTag"
+                  "$ref": "#/components/schemas/ConversationTag"
                 }
               }
             }
@@ -192,7 +192,409 @@
         }
       }
     },
-
+    "/conversations/{id}/status": {
+      "post": {
+        "description": "Set the status of a conversation.",
+        "requestBody": {
+          "description": "Set the status of a conversation.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "participantsIdentifiers",
+                  "status"
+                ],
+                "properties": {
+                  "participantsIdentifiers": {
+                    "type": "string",
+                    "description": "Unique identifiers of the conversation participants."
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "Conversation status.",
+                    "enum": [
+                      "open",
+                      "closed",
+                      "standby"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Conversation status updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations/{id}/answer-mode": {
+      "post": {
+        "description": "Set the answer mode for a conversation.",
+        "requestBody": {
+          "description": "Set the answer mode for a conversation.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "participantsIdentifiers",
+                  "answerMode"
+                ],
+                "properties": {
+                  "participantsIdentifiers": {
+                    "type": "string",
+                    "description": "Unique identifiers of the conversation participants."
+                  },
+                  "answerMode": {
+                    "type": "string",
+                    "description": "Conversation answer mode.",
+                    "enum": [
+                      "bot",
+                      "manual",
+                      "ai"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Answer mode updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations/{id}": {
+      "get": {
+        "description": "Get a single conversation by participants identifiers.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifiers of the conversation participants."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conversation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations/{id}/agents": {
+      "post": {
+        "description": "Associate agents to a conversation.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifiers of the conversation participants. Must be URL-encoded.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "List of agent IDs to associate with the conversation.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "agentIds"
+                ],
+                "properties": {
+                  "agentIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Agent IDs to associate."
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Agents associated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Remove agents from a conversation.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifiers of the conversation participants. Must be URL-encoded.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "List of agent IDs to remove from the conversation.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "agentIds"
+                ],
+                "properties": {
+                  "agentIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Agent IDs to remove."
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Agents removed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations": {
+      "post": {
+        "description": "Get conversations using cursor-based pagination.",
+        "requestBody": {
+          "description": "Provide pagination and filtering parameters to retrieve the next page of conversations.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [],
+                "properties": {
+                  "phoneNumberId": {
+                    "type": "string",
+                    "description": "Filter conversations by phone number identifier."
+                  },
+                  "startKey": {
+                    "type": "object",
+                    "description": "Key returned from a previous request. Pass this value to fetch the next page of conversations.",
+                    "additionalProperties": true
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 25,
+                    "minimum": 1,
+                    "maximum": 100,
+                    "description": "Maximum number of conversations to return."
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "Conversations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "dbObject": {
+                      "type": "array",
+                      "description": "List of conversations returned for this page of results.",
+                      "items": {
+                        "$ref": "#/components/schemas/Conversation"
+                      }
+                    },
+                    "hasMoreItemsToFetch": {
+                      "type": "boolean"
+                    },
+                    "lastEvaluatedKey": {
+                      "type": "object",
+                      "description": "If present, call the same endpoint again and pass this value as `startKey` to retrieve the next page of results. Pagination is cursor-based.",
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/customers": {
       "servers": [
         {
@@ -398,9 +800,418 @@
           }
         }
       }
+    },
+    "/templates/send": {
+      "servers": [
+        {
+          "url": "https://business.pingmee.co.il",
+          "description": "Send a Whatsapp Template"
+        }
+      ],
+      "post": {
+        "description": "Send a WhatsApp template message",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "from",
+                  "to",
+                  "type",
+                  "templateId"
+                ],
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "description": "Sender phone number ID"
+                  },
+                  "to": {
+                    "type": "string",
+                    "description": "Recipient phone number"
+                  },
+                  "type": {
+                    "type": "string",
+                    "default": "template",
+                    "enum": [
+                      "template"
+                    ]
+                  },
+                  "templateId": {
+                    "type": "string",
+                    "description": "Template identifier"
+                  },
+                  "templateData": {
+                    "type": "object",
+                    "properties": {
+                      "body": {
+                        "type": "object",
+                        "properties": {
+                          "parameters": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "header": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "IMAGE",
+                              "VIDEO",
+                              "DOCUMENT"
+                            ],
+                            "description": "Header media type"
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri"
+                          }
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Template message sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+
+
+    "/phone-numbers": {
+      "servers": [
+        {
+          "url": "https://business.pingmee.co.il",
+          "description": "Business phone numbers service"
+        }
+      ],
+      "get": {
+        "description": "Get business phone numbers",
+        "responses": {
+          "200": {
+            "description": "List of phone numbers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "phoneNumbers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Phone number ID"
+                          },
+                          "verified_name": {
+                            "type": "string",
+                            "description": "Verified business name"
+                          },
+                          "display_phone_number": {
+                            "type": "string",
+                            "description": "Display phone number"
+                          }
+                        },
+                        "required": ["id", "verified_name", "display_phone_number"],
+                        "additionalProperties": true
+                      }
+                    }
+                  },
+                  "required": ["phoneNumbers"],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/templates": {
+      "get": {
+        "description": "Get WhatsApp templates for a specific phone number",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["whatsapp"]
+            },
+            "description": "Template platform type"
+          },
+          {
+            "name": "phoneNumberId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Phone number ID to fetch templates for"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of templates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "Template ID"
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Template name"
+                      }
+                    },
+                    "required": ["id", "name"],
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sendMessage": {
+      "post": {
+        "description": "Send a message",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "sender",
+                  "receiver",
+                  "participantsIdentifiers",
+                  "message",
+                  "type",
+                  "messagePlatform",
+                  "initiator"
+                ],
+                "properties": {
+                  "sender": {
+                    "type": "string",
+                    "description": "Sender identifier"
+                  },
+                  "receiver": {
+                    "type": "string",
+                    "description": "Receiver identifier"
+                  },
+                  "participantsIdentifiers": {
+                    "type": "string",
+                    "description": "Conversation participants identifiers"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "Message content"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["default"],
+                    "default": "default"
+                  },
+                  "initiator": {
+                    "type": "string",
+                    "enum": ["person"],
+                    "default": "person"
+                  },
+                  "messagePlatform": {
+                    "type": "string",
+                    "enum": ["instagram", "facebookMessenger", "whatsapp"],
+                    "default": "whatsapp",
+                    "description": "Messaging platform"
+                  },
+                  "context": {
+                    "type": "object",
+                    "description": "Reply to an existing WhatsApp message",
+                    "properties": {
+                      "from": {
+                        "type": "string",
+                        "description": "Original sender phone number Id"
+                      },
+                      "id": {
+                        "type": "string",
+                        "description": "Original message ID"
+                      }
+                    },
+                    "required": ["from", "id"],
+                    "additionalProperties": false
+                  },
+                  "attachmentBase64": {
+                    "type": "object",
+                    "description": "Base64 encoded media attachment",
+                    "properties": {
+                      "resourceId": {
+                        "type": "string",
+                        "description": "Uploaded media resource ID"
+                      },
+                      "fileName": {
+                        "type": "string",
+                        "description": "Original file name"
+                      },
+                      "fileMimeType": {
+                        "type": "string",
+                        "description": "MIME type"
+                      },
+                      "fileSize": {
+                        "type": "number",
+                        "description": "File size in bytes"
+                      },
+                      "fileType": {
+                        "type": "string",
+                        "description": "Attachment type"
+                      }
+                    },
+                    "required": [
+                      "resourceId",
+                      "fileName",
+                      "fileMimeType",
+                      "fileSize",
+                      "fileType"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["temporaryMessageId", "message_generated_id"],
+                  "properties": {
+                    "temporaryMessageId": {
+                      "type": "string",
+                      "description": "Client-side temporary message ID"
+                    },
+                    "message_generated_id": {
+                      "type": "string",
+                      "description": "Platform-generated message ID"
+                    },
+                    "sentMessage": {
+                      "type": "object",
+                      "description": "Returned only when initiator is bot or ai",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "whatsappMessageResponse": {
+                          "type": "object",
+                          "description": "Raw platform response",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": ["message", "whatsappMessageResponse"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
-
   "components": {
     "schemas": {
       "ConversationTag": {
@@ -436,7 +1247,10 @@
         "required": [],
         "properties": {
           "profileImage": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Profile image URL if available"
           },
           "customerName": {
@@ -462,7 +1276,11 @@
           },
           "platform": {
             "type": "string",
-            "enum": ["whatsapp", "instagram", "facebookMessenger"],
+            "enum": [
+              "whatsapp",
+              "instagram",
+              "facebookMessenger"
+            ],
             "description": "Messaging platform the customer is associated with"
           },
           "phoneNumberId": {
@@ -493,7 +1311,10 @@
         ],
         "properties": {
           "profileImage": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Profile image URL if available, if not provided we try and find a matching profile picture for that phone number."
           },
           "customerName": {
@@ -512,6 +1333,137 @@
           "phoneNumberId": {
             "type": "string",
             "description": "Phone number identifier including country code. (9725xxxxxxxx)"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Conversation": {
+        "type": "object",
+        "required": [
+          "platformCompositionKey",
+          "associatedTo",
+          "participantsIdentifiers",
+          "phoneNumberId",
+          "messageWhatsAppId",
+          "customerPhoneNumberId",
+          "customer",
+          "createdAt",
+          "updatedAt",
+          "unreadCount",
+          "statusCase",
+          "answerMode"
+        ],
+        "properties": {
+          "platformCompositionKey": {
+            "type": "string",
+            "description": "Platform and phone/page identifier (e.g. whatsapp#<phoneNumberId>)."
+          },
+          "associatedTo": {
+            "type": "string",
+            "description": "Business or account the conversation is associated with."
+          },
+          "participantsIdentifiers": {
+            "type": "string",
+            "description": "Unique identifiers of the conversation participants."
+          },
+          "lastMessage": {
+            "type": "object",
+            "description": "Last message exchanged in the conversation."
+          },
+          "phoneNumberId": {
+            "type": "string",
+            "description": "Business phone number identifier."
+          },
+          "messageWhatsAppId": {
+            "type": "string",
+            "description": "WhatsApp message identifier."
+          },
+          "customerPhoneNumberId": {
+            "type": "string",
+            "description": "Customer phone number identifier."
+          },
+          "customer": {
+            "$ref": "#/components/schemas/Customer"
+          },
+          "createdAt": {
+            "type": "number",
+            "description": "Unix timestamp (milliseconds) when the conversation was created."
+          },
+          "updatedAt": {
+            "type": "number",
+            "description": "Unix timestamp (milliseconds) when the conversation was last updated."
+          },
+          "unreadCount": {
+            "type": "integer",
+            "description": "Number of unread messages in the conversation."
+          },
+          "assignedTagIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of assigned conversation tag IDs."
+          },
+          "assignedAgentIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of assigned agent IDs."
+          },
+          "lastWorkflowExecutionId": {
+            "type": "string",
+            "description": "Identifier of the last workflow execution."
+          },
+          "lastWorkflowExecution": {
+            "type": "object",
+            "description": "Last workflow execution data."
+          },
+          "aiFeatures": {
+            "type": "object",
+            "properties": {
+              "autoTranslation": {
+                "type": "object",
+                "description": "Automatic translation configuration."
+              }
+            },
+            "additionalProperties": false
+          },
+          "ai": {
+            "type": "object",
+            "properties": {
+              "tokensUsed": {
+                "type": "number",
+                "description": "Number of AI tokens used."
+              }
+            },
+            "additionalProperties": false
+          },
+          "statusCase": {
+            "type": "string",
+            "description": "Conversation status.",
+            "enum": [
+              "open",
+              "closed",
+              "standby"
+            ]
+          },
+          "answerMode": {
+            "type": "string",
+            "description": "Conversation answer mode.",
+            "enum": [
+              "bot",
+              "manual",
+              "ai"
+            ]
+          },
+          "lastSendMessageFromUser": {
+            "type": "number",
+            "description": "Unix timestamp (milliseconds) of the last message sent by the user."
+          },
+          "isOptoutFromMarketingMessages": {
+            "type": "boolean",
+            "description": "Indicates whether the customer opted out of marketing messages."
           }
         },
         "additionalProperties": false

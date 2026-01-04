@@ -19,22 +19,37 @@
             ]
           },
           {
+            "group": "Messages",
+            "pages": [
+              "api-reference/messages/send-message",
+              "api-reference/messages/send-template"
+            ]
+          },
+          {
+            "group": "Conversation",
+            "pages": [
+              "api-reference/conversation/get-all",
+              "api-reference/conversation/get",
+              "api-reference/conversation/status",
+              "api-reference/conversation/answer-mode",
+              "api-reference/conversation/agents/assign",
+              "api-reference/conversation/agents/unassign"
+            ]
+          },
+          {
+            "group": "Misc",
+            "pages": [
+              "api-reference/business/get-phone-numbers",
+              "api-reference/business/get-templates"
+            ]
+          },
+          {
             "group": "Tags",
             "pages": [
               "api-reference/tags/get-all",
               "api-reference/tags/get",
               "api-reference/tags/create",
               "api-reference/tags/delete"
-            ]
-          },
-          {
-            "group": "Messages",
-            "pages": [
-            ]
-          },
-          {
-            "group": "Conversation",
-            "pages": [
             ]
           },
           {
