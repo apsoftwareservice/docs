@@ -55,6 +55,8 @@
           {
             "group": "Agents",
             "pages": [
+              "api-reference/conversation/agents/get-all",
+              "api-reference/conversation/agents/get"
             ]
           },
           {
