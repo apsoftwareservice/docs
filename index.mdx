@@ -4,54 +4,47 @@ description: 'Working with Pingmee Micro Services'
 ---
 
 <Note>
-    When authenticating any request you should send a "Cookie" header instead of a "Authorization" header.
+  When authenticating a request, you should send a <code>Cookie</code> header instead of an <code>Authorization</code> header.
 </Note>
 
 ## Authentication & Headers
 
-Our platform is built using multiple **micro-services**.
-Each request **must include two required headers**:
+Our platform is built using multiple **microservices**.
+Each request **must include the following two headers**:
 
-- `x-api-key` – Service-specific API key
 - `Cookie` – Authentication token
+- `x-api-key` – Shared API key (provided below)
 
 ### Required Headers
 
 ```http
-x-api-key: <service-api-key>
 Cookie: accessToken=<access-token>
+x-api-key: A1MU5BKmf80ydrr797JU6j288D7w4SV8tqHX9spf
 ```
 
-Requests missing either header will be rejected.
+Requests missing either of these headers will be rejected.
 
 ---
 
-## Base Services Configuration
+### Rate Limits
 
-### AI Service
+You can send up to 20 requests per second.
 
-- **Base URL:** `https://ai.pingmee.co.il`
-- **API Key:** `SnbCiZVY0S55DvXZEwmE295vhgnDut029MN2DlEI`
+---
 
-### Business Service
+## Public Services
 
-- **Base URL:** `https://business.pingmee.co.il`
-- **API Key:** `jqKOVsNTux5mCR4phcNIp95Ni7mwYewI812ulYWU`
+###
 
-### Campaigns Service
+- **Core:** `https://api.pingmee.co.il`
 
-- **Base URL:** `https://campaigns.pingmee.co.il`
-- **API Key:** `cw2AXyZKZJ3VJt54JgNl32AZ3Sks4fkSd9Ry8Vc0`
+- **AI:** `https://ai.pingmee.co.il`
 
-### Workflows Service
+- **Business:** `https://business.pingmee.co.il`
 
-- **Base URL:** `https://workflows.pingmee.co.il`
-- **API Key:** `SpPjikyFcD6tn1dFGwnHgaUSdcbBcNDG3mPideiF`
+- **Campaigns:** `https://campaigns.pingmee.co.il`
 
-### Core API
-
-- **Base URL:** `https://api.pingmee.co.il`
-- **API Key:** `qyDZiFKVUp1Hd1nHLDaDi9YK6Bb3gBAy23SYbG46`
+- **Workflows:** `https://workflows.pingmee.co.il`
 
 ---
 
@@ -60,11 +53,8 @@ Requests missing either header will be rejected.
 ```json
 {
   "headers": {
-    "Cookie": "accessToken=<token>",
-    "x-api-key": "<API Key>"
+    "Cookie": "accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c5........",
+    "x-api-key": "A1MU5BKmf80ydrr797JU6j288D7w4SV8tqHX9spf"
   }
 }
 ```
-
-- `connection.apiKey` – User/session access token
-- `common.apiKey` – Micro-service API key
