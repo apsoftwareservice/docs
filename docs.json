@@ -69,6 +69,28 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "Make",
+        "groups": [
+          {
+            "group": "Make.com",
+            "pages": [
+              "make"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "n8n",
+        "groups": [
+          {
+            "group": "n8n.io",
+            "pages": [
+              "n8n"
+            ]
+          }
+        ]
       }
     ],
     "global": {

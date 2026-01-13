@@ -1,0 +1,68 @@
+---
+title: 'Introduction'
+description: 'Use Pingmee in n8n and automate your workflows'
+---
+
+## Getting Started
+
+We have created an n8n node to help you integrate Pingmee with your automations. This node provides a seamless way to connect Pingmee's messaging and automation features directly within your n8n workflows.
+
+<Warning>
+  This node can only be installed when n8n is self-hosted. Community nodes are not available on n8n Cloud.
+</Warning>
+
+## Install the Node
+
+To install the Pingmee node in your self-hosted n8n instance:
+
+1. Go to **Settings** → **Community nodes**
+2. Click **Install**
+3. Enter the package name: `n8n-nodes-pingmee`
+4. Click **Install**
+
+Alternatively, you can find the package on npm:
+
+[n8n-nodes-pingmee on npm](https://www.npmjs.com/package/n8n-nodes-pingmee)
+
+Once installed, you can add the Pingmee node to your n8n workflows and start automating your messaging workflows.
+
+---
+
+## What You Can Do
+
+With the Pingmee n8n node, you can:
+
+- **Subscribe to message/conversation webhooks** - Receive important events
+- **Send Messages** - Automatically send messages to customers
+- **Work with Templates** - Use message templates in your automations
+
+---
+
+## Authentication
+
+To authenticate the Pingmee node, you need to create a new credential in n8n:
+
+1. Go to your Pingmee account settings
+2. Navigate to **Settings** → **Developer**
+3. Copy your API token
+4. In n8n, create a new credential for the Pingmee node
+5. Paste the token into the credential configuration
+
+<Note>
+  Each API usage will be logged using that token, which is unique per agent. Make sure you have an active Pingmee account before setting up credentials.
+</Note>
+
+---
+
+## Next Steps
+
+After installing the node:
+
+1. Create a new credential in n8n and add your Pingmee token (found in Pingmee **Settings** → **Developer**)
+2. Create a new workflow in n8n
+3. Add the Pingmee node as a trigger or action
+4. Select the credential you created
+5. Configure your automation workflow
+6. Test and activate your workflow
+
+For detailed API documentation and available endpoints, refer to the [API Reference](/api-reference) section.
