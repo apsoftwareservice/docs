@@ -44,6 +44,14 @@
             ]
           },
           {
+            "group": "Webhooks",
+            "pages": [
+              "api-reference/webhook/get",
+              "api-reference/webhook/create",
+              "api-reference/webhook/delete"
+            ]
+          },
+          {
             "group": "Tags",
             "pages": [
               "api-reference/tags/get-all",

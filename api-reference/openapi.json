@@ -952,12 +952,18 @@
                             "description": "Display phone number"
                           }
                         },
-                        "required": ["id", "verified_name", "display_phone_number"],
+                        "required": [
+                          "id",
+                          "verified_name",
+                          "display_phone_number"
+                        ],
                         "additionalProperties": true
                       }
                     }
                   },
-                  "required": ["phoneNumbers"],
+                  "required": [
+                    "phoneNumbers"
+                  ],
                   "additionalProperties": true
                 }
               }
@@ -986,7 +992,9 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["whatsapp"]
+              "enum": [
+                "whatsapp"
+              ]
             },
             "description": "Template platform type"
           },
@@ -1019,7 +1027,10 @@
                         "description": "Template name"
                       }
                     },
-                    "required": ["id", "name"],
+                    "required": [
+                      "id",
+                      "name"
+                    ],
                     "additionalProperties": true
                   }
                 }
@@ -1076,17 +1087,25 @@
                   },
                   "type": {
                     "type": "string",
-                    "enum": ["default"],
+                    "enum": [
+                      "default"
+                    ],
                     "default": "default"
                   },
                   "initiator": {
                     "type": "string",
-                    "enum": ["person"],
+                    "enum": [
+                      "person"
+                    ],
                     "default": "person"
                   },
                   "messagePlatform": {
                     "type": "string",
-                    "enum": ["instagram", "facebookMessenger", "whatsapp"],
+                    "enum": [
+                      "instagram",
+                      "facebookMessenger",
+                      "whatsapp"
+                    ],
                     "default": "whatsapp",
                     "description": "Messaging platform"
                   },
@@ -1103,7 +1122,10 @@
                         "description": "Original message ID"
                       }
                     },
-                    "required": ["from", "id"],
+                    "required": [
+                      "from",
+                      "id"
+                    ],
                     "additionalProperties": false
                   },
                   "attachmentBase64": {
@@ -1153,7 +1175,10 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["temporaryMessageId", "message_generated_id"],
+                  "required": [
+                    "temporaryMessageId",
+                    "message_generated_id"
+                  ],
                   "properties": {
                     "temporaryMessageId": {
                       "type": "string",
@@ -1176,7 +1201,10 @@
                           "additionalProperties": true
                         }
                       },
-                      "required": ["message", "whatsappMessageResponse"],
+                      "required": [
+                        "message",
+                        "whatsappMessageResponse"
+                      ],
                       "additionalProperties": false
                     }
                   },
@@ -1208,7 +1236,6 @@
         }
       }
     },
-
     "/agents": {
       "get": {
         "description": "Returns all agents associated with the authenticated account.",
@@ -1227,7 +1254,9 @@
                       }
                     }
                   },
-                  "required": ["agents"],
+                  "required": [
+                    "agents"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1293,7 +1322,9 @@
                       "$ref": "#/components/schemas/UserPublic"
                     }
                   },
-                  "required": ["agent"],
+                  "required": [
+                    "agent"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1331,6 +1362,173 @@
           },
           "500": {
             "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhook": {
+      "get": {
+        "description": "Returns all webhooks for the authenticated account.",
+        "security": [
+          {
+            "bearerAuth": [],
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of webhooks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "webhooks": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Webhook"
+                      }
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Creates a new webhook subscription.",
+        "security": [
+          {
+            "bearerAuth": [],
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "event"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "Callback URL to receive webhook events"
+                  },
+                  "event": {
+                    "type": "string",
+                    "description": "Event type to subscribe to",
+                    "enum": [
+                      "Messages Created",
+                      "New Conversation Started"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Unique identifier of the created webhook"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhook/{webhookId}": {
+      "delete": {
+        "description": "Deletes a webhook by ID.",
+        "security": [
+          {
+            "bearerAuth": [],
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the webhook to delete",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook deleted"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Webhook not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1632,6 +1830,28 @@
             "type": "string"
           }
         }
+      },
+      "Webhook": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the webhook"
+          },
+          "url": {
+            "type": "string",
+            "description": "Callback URL for webhook events"
+          },
+          "event": {
+            "type": "string",
+            "description": "Event type the webhook is subscribed to",
+            "enum": [
+              "Messages Created",
+              "New Conversation Started"
+            ]
+          }
+        },
+        "additionalProperties": true
       }
     },
     "securitySchemes": {
