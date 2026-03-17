@@ -983,6 +983,12 @@
       }
     },
     "/templates": {
+      "servers": [
+        {
+          "url": "https://business.pingmee.co.il",
+          "description": "Business service"
+        }
+      ],
       "get": {
         "description": "Get WhatsApp templates for a specific phone number",
         "parameters": [
