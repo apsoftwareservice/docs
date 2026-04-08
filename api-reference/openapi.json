@@ -1182,6 +1182,25 @@
                     "message_generated_id": {
                       "type": "string",
                       "description": "WhatsApp Platform generated message ID"
+                    },
+                    "sentMessage": {
+                      "type": "object",
+                      "description": "Returned only when initiator is bot or ai",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "whatsappMessageResponse": {
+                          "type": "object",
+                          "description": "Raw platform response",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "message",
+                        "whatsappMessageResponse"
+                      ],
+                      "additionalProperties": false
                     }
                   },
                   "additionalProperties": false
