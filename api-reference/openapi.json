@@ -1176,36 +1176,12 @@
                 "schema": {
                   "type": "object",
                   "required": [
-                    "temporaryMessageId",
                     "message_generated_id"
                   ],
                   "properties": {
-                    "temporaryMessageId": {
-                      "type": "string",
-                      "description": "Client-side temporary message ID"
-                    },
                     "message_generated_id": {
                       "type": "string",
-                      "description": "Platform-generated message ID"
-                    },
-                    "sentMessage": {
-                      "type": "object",
-                      "description": "Returned only when initiator is bot or ai",
-                      "properties": {
-                        "message": {
-                          "type": "string"
-                        },
-                        "whatsappMessageResponse": {
-                          "type": "object",
-                          "description": "Raw platform response",
-                          "additionalProperties": true
-                        }
-                      },
-                      "required": [
-                        "message",
-                        "whatsappMessageResponse"
-                      ],
-                      "additionalProperties": false
+                      "description": "WhatsApp Platform generated message ID"
                     }
                   },
                   "additionalProperties": false
