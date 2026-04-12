@@ -1,0 +1,8 @@
+---
+title: 'Get Messages'
+openapi: 'POST /getMessages'
+---
+
+<Note>
+  **Pagination:** For the first request, omit `startKey`. To fetch the next batch, take **`lastEvaluatedKey`** from the previous response and send it as **`startKey`** in the next request. That object has the shape `{ "messageId": "<string>", "createdAt": <number> }` (Unix time in milliseconds).
+</Note>

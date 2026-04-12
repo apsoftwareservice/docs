@@ -22,7 +22,8 @@
             "group": "Messages",
             "pages": [
               "api-reference/messages/send-message",
-              "api-reference/messages/send-template"
+              "api-reference/messages/send-template",
+              "api-reference/messages/get-messages"
             ]
           },
           {

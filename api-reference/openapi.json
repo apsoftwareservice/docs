@@ -528,7 +528,7 @@
                   "startKey": {
                     "type": "object",
                     "description": "Key returned from a previous request. Pass this value to fetch the next page of conversations.",
-                    "additionalProperties": true
+                    "additionalProperties": false
                   },
                   "limit": {
                     "type": "integer",
@@ -565,7 +565,7 @@
                     "lastEvaluatedKey": {
                       "type": "object",
                       "description": "If present, call the same endpoint again and pass this value as `startKey` to retrieve the next page of results. Pagination is cursor-based.",
-                      "additionalProperties": true
+                      "additionalProperties": false
                     }
                   }
                 }
@@ -614,7 +614,7 @@
                   "lastEvaluatedKey": {
                     "type": "object",
                     "description": "Key returned from the previous request. Pass this value to fetch the next page of results.",
-                    "additionalProperties": true
+                    "additionalProperties": false
                   },
                   "limit": {
                     "type": "number",
@@ -650,7 +650,7 @@
                     "lastEvaluatedKey": {
                       "type": "object",
                       "description": "If present, call the same endpoint again and pass this value as `lastEvaluatedKey` to retrieve the next page of results. Pagination is cursor-based, not page-number based.",
-                      "additionalProperties": true
+                      "additionalProperties": false
                     }
                   }
                 }
@@ -957,14 +957,14 @@
                           "verified_name",
                           "display_phone_number"
                         ],
-                        "additionalProperties": true
+                        "additionalProperties": false
                       }
                     }
                   },
                   "required": [
                     "phoneNumbers"
                   ],
-                  "additionalProperties": true
+                  "additionalProperties": false
                 }
               }
             }
@@ -1031,7 +1031,7 @@
                       "id",
                       "name"
                     ],
-                    "additionalProperties": true
+                    "additionalProperties": false
                   }
                 }
               }
@@ -1193,7 +1193,7 @@
                         "whatsappMessageResponse": {
                           "type": "object",
                           "description": "Raw platform response",
-                          "additionalProperties": true
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -1210,6 +1210,53 @@
           },
           "400": {
             "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getMessages": {
+      "post": {
+        "description": "Fetches messages for a conversation identified by the business phone number and the customer (target) phone number. Results are ordered newest first. Omit `startKey` on the first request. For each following batch, set `startKey` to the `lastEvaluatedKey` value returned by the previous response.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetMessagesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Messages and pagination metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMessagesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid body",
             "content": {
               "application/json": {
                 "schema": {
@@ -1392,7 +1439,7 @@
                       }
                     }
                   },
-                  "additionalProperties": true
+                  "additionalProperties": false
                 }
               }
             }
@@ -1826,6 +1873,265 @@
           }
         }
       },
+      "WhatsAppMessageContext": {
+        "type": "object",
+        "description": "Reply context for a WhatsApp message",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Original sender phone number ID"
+          },
+          "id": {
+            "type": "string",
+            "description": "Original message ID"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MessageBase64Attachment": {
+        "type": "object",
+        "description": "Base64-encoded media attachment metadata",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "fileMimeType": {
+            "type": "string"
+          },
+          "fileSize": {
+            "type": "number"
+          },
+          "fileType": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FileMetadata": {
+        "type": "object",
+        "description": "Attachment file metadata",
+        "additionalProperties": false
+      },
+      "AITranslation": {
+        "type": "object",
+        "description": "AI translation payload for the message",
+        "additionalProperties": false
+      },
+      "WhatsAppErrorMessage": {
+        "type": "object",
+        "description": "WhatsApp / platform error details when sending failed",
+        "additionalProperties": false
+      },
+      "AgentIdentification": {
+        "type": "object",
+        "description": "Agent who sent or handled the message",
+        "additionalProperties": false
+      },
+      "SocialComment": {
+        "type": "object",
+        "description": "Social (e.g. Instagram/Facebook) comment payload",
+        "additionalProperties": false
+      },
+      "MessageReaction": {
+        "type": "object",
+        "description": "Single reaction on the message",
+        "additionalProperties": false
+      },
+      "RichContent": {
+        "type": "object",
+        "description": "Structured rich content (buttons, lists, etc.)",
+        "additionalProperties": false
+      },
+      "Message": {
+        "type": "object",
+        "description": "A prepared message returned by getMessages",
+        "required": [
+          "messageId",
+          "createdAt",
+          "sender",
+          "receiver",
+          "initiator",
+          "status",
+          "updatedAt",
+          "participantsIdentifiers",
+          "message",
+          "type",
+          "messagePlatform",
+          "creationPlatform",
+          "associatedTo",
+          "messageDirection"
+        ],
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "description": "Unique message ID"
+          },
+          "createdAt": {
+            "type": "number",
+            "description": "Created at (Unix milliseconds)"
+          },
+          "sender": {
+            "type": "string",
+            "description": "Sender identifier (e.g. phone number ID)"
+          },
+          "receiver": {
+            "type": "string",
+            "description": "Receiver identifier"
+          },
+          "initiator": {
+            "type": "string",
+            "description": "Who initiated the message (`Initiator`, e.g. person, bot, ai)"
+          },
+          "status": {
+            "type": "string",
+            "description": "WhatsApp / platform delivery status (`WhatsAppMessageStatus`)"
+          },
+          "updatedAt": {
+            "type": "number",
+            "description": "Last update (Unix milliseconds)"
+          },
+          "participantsIdentifiers": {
+            "type": "string",
+            "description": "Stable conversation participant key"
+          },
+          "message": {
+            "type": "string",
+            "description": "Message body text"
+          },
+          "type": {
+            "type": "string",
+            "description": "Message type (`MessageType`)"
+          },
+          "messagePlatform": {
+            "type": "string",
+            "description": "Platform the message was sent on (`PlatformType`)"
+          },
+          "creationPlatform": {
+            "type": "string",
+            "description": "Platform where the message was created (`PlatformType`)"
+          },
+          "associatedTo": {
+            "type": "string",
+            "description": "Business / account association"
+          },
+          "messageDirection": {
+            "type": "string",
+            "description": "Direction relative to the business (`MessageDirection`)"
+          },
+          "hasReaction": {
+            "type": "boolean",
+            "description": "Whether the message has reactions"
+          },
+          "hasAttachment": {
+            "type": "boolean",
+            "description": "Whether the message includes media"
+          },
+          "translation": {
+            "$ref": "#/components/schemas/AITranslation"
+          },
+          "error": {
+            "$ref": "#/components/schemas/WhatsAppErrorMessage"
+          },
+          "agentIdentification": {
+            "$ref": "#/components/schemas/AgentIdentification"
+          },
+          "context": {
+            "$ref": "#/components/schemas/WhatsAppMessageContext"
+          },
+          "comment": {
+            "$ref": "#/components/schemas/SocialComment"
+          },
+          "attachment": {
+            "$ref": "#/components/schemas/FileMetadata"
+          },
+          "attachmentBase64": {
+            "$ref": "#/components/schemas/MessageBase64Attachment"
+          },
+          "reactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageReaction"
+            }
+          },
+          "richContent": {
+            "$ref": "#/components/schemas/RichContent"
+          },
+          "informativeMessageType": {
+            "type": "string",
+            "description": "System / informative message subtype when applicable (`InformativeMessageType`)"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MessagesCursorKey": {
+        "type": "object",
+        "description": "Pagination cursor. Returned as `lastEvaluatedKey` in the response; send the same object as `startKey` on the next request to load the next batch. Shape: `{ \"messageId\": \"<string>\", \"createdAt\": <number> }` (Unix milliseconds). Omit `startKey` on the first request.",
+        "required": [
+          "messageId",
+          "createdAt"
+        ],
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "description": "Message ID from the pagination cursor (`lastEvaluatedKey`)"
+          },
+          "createdAt": {
+            "type": "number",
+            "description": "Created-at timestamp in Unix milliseconds (from `lastEvaluatedKey`)"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetMessagesRequest": {
+        "type": "object",
+        "description": "Use `startKey` only after the first page: set it to `lastEvaluatedKey` from the prior response to fetch the next batch.",
+        "required": [
+          "phoneNumberId",
+          "targetPhoneNumberId"
+        ],
+        "properties": {
+          "phoneNumberId": {
+            "type": "string",
+            "description": "Business / sender phone number ID"
+          },
+          "targetPhoneNumberId": {
+            "type": "string",
+            "description": "Customer (other party) phone number ID"
+          },
+          "startKey": {
+            "$ref": "#/components/schemas/MessagesCursorKey"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetMessagesResponse": {
+        "type": "object",
+        "required": [
+          "dbObject",
+          "hasMoreItemsToFetch"
+        ],
+        "properties": {
+          "dbObject": {
+            "type": "array",
+            "description": "Messages (newest first), each a prepared `Message` object",
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            }
+          },
+          "hasMoreItemsToFetch": {
+            "type": "boolean",
+            "description": "Whether more messages exist beyond this page"
+          },
+          "lastEvaluatedKey": {
+            "$ref": "#/components/schemas/MessagesCursorKey",
+            "description": "When present, use this value as `startKey` in the next request to fetch the next batch of (older) messages."
+          }
+        },
+        "additionalProperties": false
+      },
       "Webhook": {
         "type": "object",
         "properties": {
@@ -1846,7 +2152,7 @@
             ]
           }
         },
-        "additionalProperties": true
+        "additionalProperties": false
       }
     },
     "securitySchemes": {
