@@ -376,7 +376,7 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "Unique identifiers of the conversation participants. Must be URL-encoded.",
+            "description": "Unique identifiers of the conversation participants.",
             "schema": {
               "type": "string"
             }
@@ -446,7 +446,7 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "Unique identifiers of the conversation participants. Must be URL-encoded.",
+            "description": "Unique identifiers of the conversation participants.",
             "schema": {
               "type": "string"
             }
@@ -499,6 +499,171 @@
           },
           "500": {
             "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations/{id}/tags": {
+      "get": {
+        "description": "Returns the tag IDs assigned to a conversation. Path `id` is the conversation `participantsIdentifiers`.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Conversation participants identifiers.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tag IDs currently assigned to the conversation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Conversation tag ID"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid conversation id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Assigns one or more tags to a conversation. Path `id` is the conversation `participantsIdentifiers` (URL-encoded).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Conversation participants identifiers.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversationTagIdsBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tags assigned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing body, path id, or invalid tagIds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Removes one or more tags from a conversation. Path `id` is the conversation `participantsIdentifiers` (URL-encoded).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Conversation participants identifiers.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversationTagIdsBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Per-tag removal results; `errors` lists tag IDs that failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveConversationTagsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing body, path id, or invalid tagIds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
@@ -1122,10 +1287,6 @@
                         "description": "Original message ID"
                       }
                     },
-                    "required": [
-                      "from",
-                      "id"
-                    ],
                     "additionalProperties": false
                   },
                   "attachmentBase64": {
@@ -1153,13 +1314,6 @@
                         "description": "Attachment type"
                       }
                     },
-                    "required": [
-                      "resourceId",
-                      "fileName",
-                      "fileMimeType",
-                      "fileSize",
-                      "fileType"
-                    ],
                     "additionalProperties": false
                   }
                 },
@@ -2128,6 +2282,39 @@
           "lastEvaluatedKey": {
             "$ref": "#/components/schemas/MessagesCursorKey",
             "description": "When present, use this value as `startKey` in the next request to fetch the next batch of (older) messages."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConversationTagIdsBody": {
+        "type": "object",
+        "required": [
+          "tagIds"
+        ],
+        "properties": {
+          "tagIds": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            },
+            "description": "Tag IDs to assign (POST) or remove (DELETE) from the conversation"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RemoveConversationTagsResponse": {
+        "type": "object",
+        "required": [
+          "errors"
+        ],
+        "properties": {
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Human-readable messages for tags that failed to remove; empty when all succeeded"
           }
         },
         "additionalProperties": false

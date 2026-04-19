@@ -33,6 +33,9 @@
               "api-reference/conversation/get",
               "api-reference/conversation/status",
               "api-reference/conversation/answer-mode",
+              "api-reference/conversation/tags-get",
+              "api-reference/conversation/tags-assign",
+              "api-reference/conversation/tags-remove",
               "api-reference/conversation/agents/assign",
               "api-reference/conversation/agents/unassign"
             ]
