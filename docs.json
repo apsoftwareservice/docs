@@ -41,6 +41,13 @@
             ]
           },
           {
+            "group": "Workflows",
+            "pages": [
+              "api-reference/workflows/get-minimal",
+              "api-reference/workflows/trigger"
+            ]
+          },
+          {
             "group": "Misc",
             "pages": [
               "api-reference/business/get-phone-numbers",

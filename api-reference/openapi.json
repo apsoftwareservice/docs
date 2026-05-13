@@ -1569,6 +1569,173 @@
         }
       }
     },
+    "/workflows": {
+      "servers": [
+        {
+          "url": "https://workflows.pingmee.co.il",
+          "description": "Workflows service"
+        }
+      ],
+      "post": {
+        "description": "Returns the workflow data.",
+        "requestBody": {
+          "description": "Request the minimal workflow dataset.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "getAllWorkflowsMinimalData"
+                ],
+                "properties": {
+                  "getAllWorkflowsMinimalData": {
+                    "type": "boolean",
+                    "description": "When true, returns only the minimal workflow data required by the client cache.",
+                    "default": true,
+                    "example": true
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Minimal workflow list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "result"
+                  ],
+                  "properties": {
+                    "result": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Workflow"
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workflows/{workflowId}/trigger": {
+      "servers": [
+        {
+          "url": "https://workflows.pingmee.co.il",
+          "description": "Workflows service"
+        }
+      ],
+      "post": {
+        "description": "Manually trigger a bot workflow for a conversation.",
+        "parameters": [
+          {
+            "name": "workflowId",
+            "in": "path",
+            "required": true,
+            "description": "Workflow identifier.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Conversation and optional node to start the workflow from.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "participantsIdentifiers"
+                ],
+                "properties": {
+                  "participantsIdentifiers": {
+                    "type": "string",
+                    "description": "Unique identifiers of the conversation participants."
+                  },
+                  "startFromNodeId": {
+                    "type": "string",
+                    "description": "Optional workflow node identifier to start execution from."
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Workflow triggered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/webhook": {
       "get": {
         "description": "Returns all webhooks for the authenticated account.",
@@ -2315,6 +2482,24 @@
               "type": "string"
             },
             "description": "Human-readable messages for tags that failed to remove; empty when all succeeded"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Workflow": {
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Workflow identifier."
+          },
+          "name": {
+            "type": "string",
+            "description": "Workflow name."
           }
         },
         "additionalProperties": false
