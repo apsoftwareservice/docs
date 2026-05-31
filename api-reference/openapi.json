@@ -1668,7 +1668,7 @@
           }
         ],
         "requestBody": {
-          "description": "Conversation and optional node to start the workflow from.",
+          "description": "Conversation, optional node to start the workflow from, and optional JSON payload for the trigger.",
           "content": {
             "application/json": {
               "schema": {
@@ -1684,6 +1684,11 @@
                   "startFromNodeId": {
                     "type": "string",
                     "description": "Optional workflow node identifier to start execution from."
+                  },
+                  "triggerData": {
+                    "type": "object",
+                    "description": "Optional JSON object passed to the workflow when it is triggered.",
+                    "additionalProperties": true
                   }
                 },
                 "additionalProperties": false
