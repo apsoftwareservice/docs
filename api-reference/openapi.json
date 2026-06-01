@@ -1674,12 +1674,17 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "participantsIdentifiers"
+                  "phoneNumberId",
+                  "customerPhoneNumberId"
                 ],
                 "properties": {
-                  "participantsIdentifiers": {
+                  "phoneNumberId": {
                     "type": "string",
-                    "description": "Unique identifiers of the conversation participants."
+                    "description": "Business phone number identifier."
+                  },
+                  "customerPhoneNumberId": {
+                    "type": "string",
+                    "description": "Customer phone number identifier."
                   },
                   "startFromNodeId": {
                     "type": "string",
