@@ -1812,11 +1812,26 @@
                   },
                   "event": {
                     "type": "string",
-                    "description": "Event type to subscribe to",
+                    "description": "Event type to subscribe to.",
                     "enum": [
-                      "Messages Created",
-                      "New Conversation Started"
-                    ]
+                      "conversationCreated",
+                      "tagChanged",
+                      "statusChanged",
+                      "messageCreated"
+                    ],
+                    "x-enum-varnames": [
+                      "New Conversation Started",
+                      "Conversation Tags Updated",
+                      "Conversation Status Updated",
+                      "Messages Created"
+                    ],
+                    "x-enumDescriptions": {
+                      "conversationCreated": "New Conversation Started",
+                      "tagChanged": "Conversation Tags Updated",
+                      "statusChanged": "Conversation Status Updated",
+                      "messageCreated": "Messages Created",
+                    },
+                    "example": "messageCreated"
                   }
                 }
               }
@@ -2514,6 +2529,28 @@
         },
         "additionalProperties": false
       },
+      "WebhookEvent": {
+        "type": "string",
+        "description": "Event type the webhook is subscribed to.",
+        "enum": [
+          "conversationCreated",
+          "tagChanged",
+          "statusChanged",
+          "messageUpdated"
+        ],
+        "x-enum-varnames": [
+          "New Conversation Started",
+          "Conversation Tags Updated",
+          "Conversation Status Updated",
+          "Messages Created"
+        ],
+        "x-enumDescriptions": {
+          "conversationCreated": "New Conversation Started",
+          "tagChanged": "Conversation Tags Updated",
+          "statusChanged": "Conversation Status Updated",
+          "messageCreated": "Messages Created"
+        }
+      },
       "Webhook": {
         "type": "object",
         "properties": {
@@ -2526,12 +2563,7 @@
             "description": "Callback URL for webhook events"
           },
           "event": {
-            "type": "string",
-            "description": "Event type the webhook is subscribed to",
-            "enum": [
-              "Messages Created",
-              "New Conversation Started"
-            ]
+            "$ref": "#/components/schemas/WebhookEvent"
           }
         },
         "additionalProperties": false
