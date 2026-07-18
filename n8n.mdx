@@ -43,15 +43,16 @@ With the Pingmee n8n node, you can:
 
 To authenticate the Pingmee node, you need to create a new credential in n8n:
 
-1. Go to your Pingmee account settings
-2. Navigate to **Settings** → **Developer**
-3. Copy your API token
-4. In n8n, create a new credential for the Pingmee node
-5. Paste the token into the credential configuration
+1. Open the Pingmee app and go to **Settings** → **Developer Tools** (`כלים למפתחים`)
+2. Copy your **personal token** and **API key**
+3. In n8n, create a new credential for the Pingmee node
+4. Paste the values into the credential configuration
 
 <Note>
-  Each API usage will be logged using that token, which is unique per agent. Make sure you have an active Pingmee account before setting up credentials.
+  Each business has its own personal token and API key. API usage is logged per token. Make sure you have an active Pingmee account before setting up credentials.
 </Note>
+
+For more details, see [Authentication & Headers](/#authentication--headers).
 
 ---
 
@@ -59,11 +60,11 @@ To authenticate the Pingmee node, you need to create a new credential in n8n:
 
 After installing the node:
 
-1. Create a new credential in n8n and add your Pingmee token (found in Pingmee **Settings** → **Developer**)
+1. Create a new credential in n8n and add your Pingmee personal token and API key (found in Pingmee **Settings** → **Developer Tools**)
 2. Create a new workflow in n8n
 3. Add the Pingmee node as a trigger or action
 4. Select the credential you created
 5. Configure your automation workflow
 6. Test and activate your workflow
 
-For detailed API documentation and available endpoints, refer to the [API Reference](/api-reference) section.
+For detailed API documentation and available endpoints, refer to the [API Reference](/) section.

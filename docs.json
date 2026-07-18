@@ -79,6 +79,14 @@
             ]
           },
           {
+            "group": "AI Agents",
+            "pages": [
+              "api-reference/ai-agents/get-all",
+              "api-reference/ai-agents/get",
+              "api-reference/ai-agents/update"
+            ]
+          },
+          {
             "group": "Customers",
             "pages": [
               "api-reference/customers/get-all",

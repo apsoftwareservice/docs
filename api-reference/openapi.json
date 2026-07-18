@@ -1569,6 +1569,249 @@
         }
       }
     },
+    "/ai-agents": {
+      "servers": [
+        {
+          "url": "https://ai.pingmee.co.il",
+          "description": "AI service"
+        }
+      ],
+      "get": {
+        "summary": "List AI agents",
+        "description": "Returns a flat paginated list of AI agents for the authenticated business. Pass `flat=true` to skip folder grouping. Distinct from human agents under `/agents`.",
+        "parameters": [
+          {
+            "name": "flat",
+            "in": "query",
+            "required": true,
+            "description": "Must be `true` to return a flat agent list (no folders).",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true"
+              ]
+            }
+          },
+          {
+            "name": "getFiles",
+            "in": "query",
+            "required": false,
+            "description": "When `true`, loads vector store files for each agent. Defaults to omitting file contents.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size. Defaults to 25.",
+            "schema": {
+              "type": "integer",
+              "default": 25,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "exclusiveStartKey",
+            "in": "query",
+            "required": false,
+            "description": "URI-encoded JSON pagination cursor from a previous response `lastEvaluatedKey`.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Flat AI agents page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AIAgentsListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai-agents/{id}": {
+      "servers": [
+        {
+          "url": "https://ai.pingmee.co.il",
+          "description": "AI service"
+        }
+      ],
+      "get": {
+        "summary": "Get AI agent",
+        "description": "Returns a single AI agent by ID, including vector store files when available.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "AI agent identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI agent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AIAgent"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "AI agent not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update AI agent",
+        "description": "Updates an AI agent. Supported fields: `name`, `description`, `roles`, and `vectorStore.required`. Changed roles regenerate their OpenAI function tools.\n\n**Field length limits** (same as the Pingmee app; exceeding them returns `400`):\n\n| Field | Max length |\n| --- | --- |\n| `description` | 5000 |\n| `roles[].name` | 40 |\n| `roles[].description` | 1500 |\n| `roles[].instructions` | 1500 |\n| `roles[].webhook` | 300 |",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "AI agent identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Fields to update on the AI agent",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAIAgent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "AI agent updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "AIAgent '123' updated successfully."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "AI agent ID missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/workflows": {
       "servers": [
         {
@@ -1829,7 +2072,7 @@
                       "conversationCreated": "New Conversation Started",
                       "tagChanged": "Conversation Tags Updated",
                       "statusChanged": "Conversation Status Updated",
-                      "messageCreated": "Messages Created",
+                      "messageCreated": "Messages Created"
                     },
                     "example": "messageCreated"
                   }
@@ -2529,6 +2772,204 @@
         },
         "additionalProperties": false
       },
+      "AIAgentRole": {
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "instructions",
+          "webhook",
+          "allRequired"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 40,
+            "description": "Role name (max 40 characters). Also used to derive the OpenAI function tool name."
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1500,
+            "description": "Short description of the role (max 1500 characters)"
+          },
+          "instructions": {
+            "type": "string",
+            "maxLength": 1500,
+            "description": "Instructions used when generating the role tool schema (max 1500 characters)"
+          },
+          "webhook": {
+            "type": "string",
+            "maxLength": 300,
+            "description": "Webhook URL invoked when this role tool is called (max 300 characters)"
+          },
+          "allRequired": {
+            "type": "boolean",
+            "description": "When true, generated tool parameters are all required (strict mode)"
+          },
+          "tool": {
+            "type": "object",
+            "description": "Generated OpenAI function tool definition",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AIAgentVectorStore": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Vector store identifier"
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether the agent must use the vector store for answers"
+          },
+          "files": {
+            "type": "array",
+            "description": "Files currently in the vector store",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "fileNamesMapping": {
+            "type": "object",
+            "description": "Map of vector store file IDs to display names",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "AIAgent": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "associatedTo",
+          "folderId",
+          "created",
+          "lastModified",
+          "isActive",
+          "profileImage",
+          "roles"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "AI agent identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 5000,
+            "description": "Business / agent description used as context (max 5000 characters)"
+          },
+          "associatedTo": {
+            "type": "string",
+            "description": "Business the agent belongs to"
+          },
+          "folderId": {
+            "type": "string",
+            "description": "Folder that contains this agent"
+          },
+          "created": {
+            "type": "number",
+            "description": "Unix timestamp (milliseconds) when the agent was created"
+          },
+          "lastModified": {
+            "type": "number",
+            "description": "Unix timestamp (milliseconds) when the agent was last modified"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the agent is active"
+          },
+          "profileImage": {
+            "type": "string",
+            "description": "Profile image URL (may be signed)"
+          },
+          "tokensUsed": {
+            "type": "number",
+            "description": "Cumulative tokens used by this agent"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AIAgentRole"
+            }
+          },
+          "vectorStore": {
+            "$ref": "#/components/schemas/AIAgentVectorStore"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateAIAgent": {
+        "type": "object",
+        "description": "Partial update payload for an AI agent. Length limits: description 5000; role name 40; role description/instructions 1500; role webhook 300.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "New display name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 5000,
+            "description": "New description (max 5000 characters)"
+          },
+          "roles": {
+            "type": "array",
+            "description": "Full roles list. Changed roles regenerate their tool schemas. Limits: name 40, description 1500, instructions 1500, webhook 300.",
+            "items": {
+              "$ref": "#/components/schemas/AIAgentRole"
+            }
+          },
+          "vectorStore": {
+            "type": "object",
+            "description": "Only `required` is updatable",
+            "properties": {
+              "required": {
+                "type": "boolean",
+                "description": "Whether the agent must use the vector store"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "AIAgentsListResponse": {
+        "type": "object",
+        "required": [
+          "agents",
+          "hasMoreItemsToFetch"
+        ],
+        "properties": {
+          "agents": {
+            "type": "array",
+            "description": "Flat list of AI agents for this page",
+            "items": {
+              "$ref": "#/components/schemas/AIAgent"
+            }
+          },
+          "hasMoreItemsToFetch": {
+            "type": "boolean",
+            "description": "Whether more agents are available"
+          },
+          "lastEvaluatedKey": {
+            "type": "object",
+            "description": "Pagination cursor for the next page. Pass URI-encoded as `exclusiveStartKey`.",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      },
       "WebhookEvent": {
         "type": "string",
         "description": "Event type the webhook is subscribed to.",
@@ -2577,12 +3018,14 @@
       "cookieAuth": {
         "type": "apiKey",
         "in": "header",
-        "name": "Cookie"
+        "name": "Cookie",
+        "description": "Personal access token from Pingmee Settings → Developer Tools"
       },
       "ApiKeyAuth": {
         "type": "apiKey",
         "in": "header",
-        "name": "x-api-key"
+        "name": "x-api-key",
+        "description": "Business API key from Pingmee Settings → Developer Tools"
       }
     }
   }

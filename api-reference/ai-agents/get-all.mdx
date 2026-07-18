@@ -1,0 +1,8 @@
+---
+title: 'Get AI Agents'
+openapi: 'GET /ai-agents'
+---
+
+<Note>
+  Call this endpoint on the AI service: `https://ai.pingmee.co.il` with `flat=true`. Returns up to 25 agents per page (override with `limit`). Use `lastEvaluatedKey` as `exclusiveStartKey` for the next page. Pass `getFiles=true` only when you need vector store files for each agent.
+</Note>

@@ -12,14 +12,33 @@ description: 'Working with Pingmee Micro Services'
 Our platform is built using multiple **microservices**.
 Each request **must include the following two headers**:
 
-- `Cookie` – Authentication token
-- `x-api-key` – Shared API key (provided below)
+- `Cookie` – Your personal access token
+- `x-api-key` – Your business API key
+
+Both values are unique to your business and are available in the Pingmee app.
+
+### Where to find your token and API key
+
+1. Open the Pingmee app
+2. Go to **Settings** (gear icon in the sidebar)
+3. Select **Developer Tools** (`כלים למפתחים`)
+
+On this page you will find:
+
+- **Personal token** – use this value in the `Cookie` header. You can regenerate it at any time.
+- **API key** – use this value in the `x-api-key` header on every API call.
+
+![Developer Tools page in Pingmee Settings](/images/developer-tools.png)
+
+<Warning>
+  Keep your personal token and API key private. Do not share them or commit them to version control.
+</Warning>
 
 ### Required Headers
 
 ```http
-Cookie: <access-token>
-x-api-key: A1MU5BKmf80ydrr797JU6j288D7w4SV8tqHX9spf
+Cookie: <your-personal-token>
+x-api-key: <your-api-key>
 ```
 
 Requests missing either of these headers will be rejected.
@@ -28,7 +47,15 @@ Requests missing either of these headers will be rejected.
 
 ### Rate Limits
 
-You can send up to 20 requests per second.
+Rate limits depend on your business subscription plan. Limits apply across all Pingmee API services combined.
+
+| Plan | Rate (req/s) | Burst | Daily quota |
+| --- | --- | --- | --- |
+| Trial | 20 | 40 | 10,000 |
+| Basic | 40 | 80 | 60,000 |
+| Expanded | 100 | 200 | 125,000 |
+| ExpertAI | 200 | 400 | 200,000 |
+| Partner | 500 | 1,000 | Custom |
 
 ---
 
@@ -53,8 +80,8 @@ You can send up to 20 requests per second.
 ```json
 {
   "headers": {
-    "Cookie": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c5........",
-    "x-api-key": "A1MU5BKmf80ydrr797JU6j288D7w4SV8tqHX9spf"
+    "Cookie": "<your-personal-token>",
+    "x-api-key": "<your-api-key>"
   }
 }
 ```

@@ -1,0 +1,22 @@
+---
+title: 'Update AI Agent'
+openapi: 'PUT /ai-agents/{id}'
+---
+
+<Note>
+  Call this endpoint on the AI service: `https://ai.pingmee.co.il`.
+</Note>
+
+You can update `name`, `description`, `roles`, and `vectorStore.required`. When a role changes, its OpenAI function tool is regenerated automatically.
+
+## Field length limits
+
+These match the Pingmee app. Requests that exceed them return `400`.
+
+| Field | Max length |
+| --- | --- |
+| `description` | 5000 |
+| `roles[].name` | 40 |
+| `roles[].description` | 1500 |
+| `roles[].instructions` | 1500 |
+| `roles[].webhook` | 300 |
