@@ -878,6 +878,73 @@
           "description": "Campaigns service"
         }
       ],
+      "post": {
+        "summary": "Update customer",
+        "description": "Updates editable customer fields. This is a partial update — only include the fields you want to change. `customerName` is not updatable here.\n\nUpdatable fields: `customerNickname`, `email`, `description`, `phoneNumber`.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Phone number ID of the customer to update.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Fields to update. Omit fields you do not want to change.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomer"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Customer updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "customer"
+                  ],
+                  "properties": {
+                    "customer": {
+                      "$ref": "#/components/schemas/Customer"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or customer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "description": "Deletes a single customer based on the ID supplied",
         "parameters": [
@@ -2221,6 +2288,10 @@
             "type": "string",
             "description": "The name the business gave the customer"
           },
+          "description": {
+            "type": "string",
+            "description": "Free-text note / description controlled by the business (shown in the conversation sidebar)"
+          },
           "createdAt": {
             "type": "number",
             "description": "Unix timestamp (milliseconds) when the customer was created"
@@ -2285,6 +2356,10 @@
             "type": "string",
             "description": "Custom name to identify the customer in the business (not seen by the end user)"
           },
+          "description": {
+            "type": "string",
+            "description": "Free-text note / description controlled by the business (shown in the conversation sidebar)"
+          },
           "email": {
             "type": "string",
             "format": "email",
@@ -2293,6 +2368,30 @@
           "phoneNumberId": {
             "type": "string",
             "description": "Phone number identifier including country code. (9725xxxxxxxx)"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateCustomer": {
+        "type": "object",
+        "description": "Partial customer update. Include only the fields you want to change.",
+        "properties": {
+          "customerNickname": {
+            "type": "string",
+            "description": "Custom name to identify the customer in the business"
+          },
+          "description": {
+            "type": "string",
+            "description": "Free-text note / description (shown in the conversation sidebar)"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Customer email address"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Editable phone number controlled by the business"
           }
         },
         "additionalProperties": false

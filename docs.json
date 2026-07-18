@@ -92,6 +92,7 @@
               "api-reference/customers/get-all",
               "api-reference/customers/get",
               "api-reference/customers/create",
+              "api-reference/customers/update",
               "api-reference/customers/delete"
             ]
           }

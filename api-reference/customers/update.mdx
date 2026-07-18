@@ -1,0 +1,18 @@
+---
+title: 'Update Customer'
+openapi: 'POST /customers/{id}'
+---
+
+<Note>
+  Call this endpoint on the campaigns service: `https://campaigns.pingmee.co.il`.
+</Note>
+
+Partial update — send only the fields you want to change. For example, to update description alone:
+
+```json
+{
+  "description": "VIP customer, prefers Hebrew"
+}
+```
+
+Updatable fields: `customerNickname`, `email`, `description`, `phoneNumber`.
