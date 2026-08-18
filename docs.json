@@ -153,6 +153,9 @@
       "href": "https://pingmee.co.il"
     }
   },
+  "metadata": {
+    "timestamp": true
+  },
   "contextual": {
     "options": [
      "copy",

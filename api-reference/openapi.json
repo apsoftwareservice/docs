@@ -103,7 +103,7 @@
           {
             "name": "id",
             "in": "path",
-            "description": "ID of conversation tag to delete",
+            "description": "Conversation tag ID. Must be URL-encoded when used in the path.",
             "required": true,
             "schema": {
               "type": "string"
@@ -150,7 +150,7 @@
           {
             "name": "id",
             "in": "path",
-            "description": "ID of conversation tag to get",
+            "description": "Conversation tag ID. Must be URL-encoded when used in the path.",
             "required": true,
             "schema": {
               "type": "string",
@@ -194,7 +194,7 @@
     },
     "/conversations/{id}/status": {
       "post": {
-        "description": "Set the status of a conversation.",
+        "description": "Set the status of a conversation. Path `id` is the conversation `participantsIdentifiers` (URL-encoded).",
         "requestBody": {
           "description": "Set the status of a conversation.",
           "content": {
@@ -208,7 +208,7 @@
                 "properties": {
                   "participantsIdentifiers": {
                     "type": "string",
-                    "description": "Unique identifiers of the conversation participants."
+                    "description": "Unique identifiers of the conversation participants. Must match the URL path `id` (before URL encoding)."
                   },
                   "status": {
                     "type": "string",
@@ -217,6 +217,31 @@
                       "open",
                       "closed",
                       "standby"
+                    ]
+                  },
+                  "phoneNumberId": {
+                    "type": "string",
+                    "description": "Business phone number ID. Required for Green API and web chat status notifications."
+                  },
+                  "platform": {
+                    "type": "string",
+                    "description": "Messaging platform. Used for platform-specific status handling.",
+                    "enum": [
+                      "whatsapp",
+                      "greenAPI",
+                      "web",
+                      "instagram",
+                      "facebookMessenger"
+                    ]
+                  },
+                  "initiator": {
+                    "type": "string",
+                    "description": "Who initiated the status change. Defaults to `person` when omitted.",
+                    "enum": [
+                      "person",
+                      "bot",
+                      "campaign",
+                      "ai"
                     ]
                   }
                 },
@@ -248,12 +273,34 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Conversation participants identifiers (`participantsIdentifiers`). Must be URL-encoded when used in the path (for example, encode `#` as `%23`).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "/conversations/{id}/answer-mode": {
       "post": {
-        "description": "Set the answer mode for a conversation.",
+        "description": "Set the answer mode for a conversation. Path `id` is the conversation `participantsIdentifiers` (URL-encoded).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Conversation participants identifiers (`participantsIdentifiers`). Must be URL-encoded when used in the path (for example, encode `#` as `%23`).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "description": "Set the answer mode for a conversation.",
           "content": {
@@ -261,14 +308,9 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "participantsIdentifiers",
                   "answerMode"
                 ],
                 "properties": {
-                  "participantsIdentifiers": {
-                    "type": "string",
-                    "description": "Unique identifiers of the conversation participants."
-                  },
                   "answerMode": {
                     "type": "string",
                     "description": "Conversation answer mode.",
@@ -312,7 +354,7 @@
     },
     "/conversations/{id}": {
       "get": {
-        "description": "Get a single conversation by participants identifiers.",
+        "description": "Get a single conversation by participants identifiers. Path `id` must be URL-encoded.",
         "parameters": [
           {
             "name": "id",
@@ -321,7 +363,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Unique identifiers of the conversation participants."
+            "description": "Conversation participants identifiers (`participantsIdentifiers`). Must be URL-encoded when used in the path (for example, encode `#` as `%23`)."
           }
         ],
         "responses": {
@@ -370,13 +412,13 @@
     },
     "/conversations/{id}/agents": {
       "post": {
-        "description": "Associate agents to a conversation.",
+        "description": "Associate agents to a conversation. Path `id` is the conversation `participantsIdentifiers` (URL-encoded).",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "Unique identifiers of the conversation participants.",
+            "description": "Conversation participants identifiers (`participantsIdentifiers`). Must be URL-encoded when used in the path (for example, encode `#` as `%23`).",
             "schema": {
               "type": "string"
             }
@@ -412,7 +454,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "string",
+                  "example": "success"
                 }
               }
             }
@@ -440,13 +483,13 @@
         }
       },
       "delete": {
-        "description": "Remove agents from a conversation.",
+        "description": "Remove agents from a conversation. Path `id` is the conversation `participantsIdentifiers` (URL-encoded).",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "Unique identifiers of the conversation participants.",
+            "description": "Conversation participants identifiers (`participantsIdentifiers`). Must be URL-encoded when used in the path (for example, encode `#` as `%23`).",
             "schema": {
               "type": "string"
             }
@@ -482,7 +525,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "string",
+                  "example": "success"
                 }
               }
             }
@@ -512,13 +556,13 @@
     },
     "/conversations/{id}/tags": {
       "get": {
-        "description": "Returns the tag IDs assigned to a conversation. Path `id` is the conversation `participantsIdentifiers`.",
+        "description": "Returns the tag IDs assigned to a conversation. Path `id` is the conversation `participantsIdentifiers` (URL-encoded).",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "Conversation participants identifiers.",
+            "description": "Conversation participants identifiers (`participantsIdentifiers`). Must be URL-encoded when used in the path (for example, encode `#` as `%23`).",
             "schema": {
               "type": "string"
             }
@@ -568,7 +612,7 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "Conversation participants identifiers.",
+            "description": "Conversation participants identifiers (`participantsIdentifiers`). Must be URL-encoded when used in the path (for example, encode `#` as `%23`).",
             "schema": {
               "type": "string"
             }
@@ -625,7 +669,7 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "Conversation participants identifiers.",
+            "description": "Conversation participants identifiers (`participantsIdentifiers`). Must be URL-encoded when used in the path (for example, encode `#` as `%23`).",
             "schema": {
               "type": "string"
             }
@@ -679,7 +723,7 @@
       "post": {
         "description": "Get conversations using cursor-based pagination.",
         "requestBody": {
-          "description": "Provide pagination and filtering parameters to retrieve the next page of conversations.",
+          "description": "Pagination and filter parameters. Send an empty object `{}` to use defaults.",
           "content": {
             "application/json": {
               "schema": {
@@ -707,7 +751,7 @@
               }
             }
           },
-          "required": false
+          "required": true
         },
         "responses": {
           "200": {
@@ -770,7 +814,7 @@
       "post": {
         "description": "Returns all customers using pagination",
         "requestBody": {
-          "description": "Optionally provide pagination parameters to retrieve the next page of customers.",
+          "description": "Pagination parameters. Send an empty object `{}` for the first page.",
           "content": {
             "application/json": {
               "schema": {
@@ -792,7 +836,7 @@
               }
             }
           },
-          "required": false
+          "required": true
         },
         "responses": {
           "200": {
@@ -802,7 +846,7 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "customers": {
+                    "dbObject": {
                       "type": "array",
                       "description": "List of customers returned for this page of results.",
                       "items": {
@@ -835,13 +879,17 @@
         }
       },
       "put": {
-        "description": "Creates new customers",
+        "description": "Creates one or more customers.",
         "requestBody": {
-          "description": "A list of customers to create",
+          "description": "Array of customers to create.",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateCustomer"
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CreateCustomer"
+                },
+                "minItems": 1
               }
             }
           },
@@ -853,7 +901,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Customer"
+                  "type": "object",
+                  "required": [
+                    "customers"
+                  ],
+                  "properties": {
+                    "customers": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Customer"
+                      }
+                    }
+                  },
+                  "additionalProperties": false
                 }
               }
             }
@@ -885,7 +945,7 @@
           {
             "name": "id",
             "in": "path",
-            "description": "Phone number ID of the customer to update.",
+            "description": "Customer phone number ID (includes country code, for example `9725xxxxxxxx`). Must be URL-encoded when used in the path.",
             "required": true,
             "schema": {
               "type": "string"
@@ -951,7 +1011,7 @@
           {
             "name": "id",
             "in": "path",
-            "description": "Phone number ID of the customer to delete.",
+            "description": "Customer phone number ID (includes country code, for example `9725xxxxxxxx`). Must be URL-encoded when used in the path.",
             "required": true,
             "schema": {
               "type": "string"
@@ -959,9 +1019,22 @@
           }
         ],
         "responses": {
-          "204": {
+          "200": {
             "description": "Customer deleted",
-            "content": {}
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "string",
+                      "example": "true"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "400": {
             "description": "unexpected error",
@@ -991,7 +1064,7 @@
           {
             "name": "id",
             "in": "path",
-            "description": "Phone number ID of the customer to get",
+            "description": "Customer phone number ID (includes country code, for example `9725xxxxxxxx`). Must be URL-encoded when used in the path.",
             "required": true,
             "schema": {
               "type": "string",
@@ -1005,7 +1078,16 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Customer"
+                  "type": "object",
+                  "required": [
+                    "customer"
+                  ],
+                  "properties": {
+                    "customer": {
+                      "$ref": "#/components/schemas/Customer"
+                    }
+                  },
+                  "additionalProperties": false
                 }
               }
             }
@@ -1166,8 +1248,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "phoneNumbers": {
+                    "dbObject": {
                       "type": "array",
+                      "description": "Business phone numbers for the authenticated account.",
                       "items": {
                         "type": "object",
                         "properties": {
@@ -1184,17 +1267,21 @@
                             "description": "Display phone number"
                           }
                         },
-                        "required": [
-                          "id",
-                          "verified_name",
-                          "display_phone_number"
-                        ],
-                        "additionalProperties": false
+                        "additionalProperties": true
                       }
+                    },
+                    "hasMoreItemsToFetch": {
+                      "type": "boolean"
+                    },
+                    "lastEvaluatedKey": {
+                      "type": "object",
+                      "description": "Pagination cursor when more phone numbers exist.",
+                      "additionalProperties": true
                     }
                   },
                   "required": [
-                    "phoneNumbers"
+                    "dbObject",
+                    "hasMoreItemsToFetch"
                   ],
                   "additionalProperties": false
                 }
@@ -1280,7 +1367,13 @@
             }
           }
         }
-      }
+      },
+      "servers": [
+        {
+          "url": "https://api.pingmee.co.il",
+          "description": "Core API"
+        }
+      ]
     },
     "/sendMessage": {
       "post": {
@@ -1560,13 +1653,13 @@
     },
     "/agents/{id}": {
       "get": {
-        "description": "Returns a single agent by ID (email).",
+        "description": "Returns a single agent by ID (email). Path `id` must be URL-encoded.",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "Agent email identifier",
+            "description": "Agent email address (agent ID). Must be URL-encoded when used in the path (for example, encode `@` as `%40`).",
             "schema": {
               "type": "string",
               "format": "email"
@@ -1603,8 +1696,8 @@
               }
             }
           },
-          "404": {
-            "description": "Agent not found",
+          "401": {
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
@@ -1613,8 +1706,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized",
+          "404": {
+            "description": "Agent not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1735,13 +1828,13 @@
       ],
       "get": {
         "summary": "Get AI agent",
-        "description": "Returns a single AI agent by ID, including vector store files when available.",
+        "description": "Returns a single AI agent by ID, including vector store files when available. Path `id` must be URL-encoded.",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "AI agent identifier",
+            "description": "AI agent identifier. Must be URL-encoded when used in the path.",
             "schema": {
               "type": "string"
             }
@@ -1758,8 +1851,8 @@
               }
             }
           },
-          "404": {
-            "description": "AI agent not found",
+          "401": {
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
@@ -1768,8 +1861,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized",
+          "404": {
+            "description": "AI agent not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1792,13 +1885,13 @@
       },
       "put": {
         "summary": "Update AI agent",
-        "description": "Updates an AI agent. Supported fields: `name`, `description`, `roles`, and `vectorStore.required`. Changed roles regenerate their OpenAI function tools.\n\n**Field length limits** (same as the Pingmee app; exceeding them returns `400`):\n\n| Field | Max length |\n| --- | --- |\n| `description` | 5000 |\n| `roles[].name` | 40 |\n| `roles[].description` | 1500 |\n| `roles[].instructions` | 1500 |\n| `roles[].webhook` | 300 |",
+        "description": "Updates an AI agent. Supported fields: `name`, `description`, `roles`, and `vectorStore.required`. Changed roles regenerate their OpenAI function tools.\n\n**Field length limits** (same as the Pingmee app; exceeding them returns `400`):\n\n| Field | Max length |\n| --- | --- |\n| `description` | 5000 |\n| `roles[].name` | 40 |\n| `roles[].description` | 1500 |\n| `roles[].instructions` | 1500 |\n| `roles[].webhook` | 300 |\n\nPath `id` must be URL-encoded.",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "AI agent identifier",
+            "description": "AI agent identifier. Must be URL-encoded when used in the path.",
             "schema": {
               "type": "string"
             }
@@ -1846,8 +1939,8 @@
               }
             }
           },
-          "404": {
-            "description": "AI agent ID missing",
+          "401": {
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
@@ -1856,8 +1949,8 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized",
+          "404": {
+            "description": "AI agent ID missing",
             "content": {
               "application/json": {
                 "schema": {
@@ -1927,6 +2020,15 @@
                       "items": {
                         "$ref": "#/components/schemas/Workflow"
                       }
+                    },
+                    "lastEvaluatedKey": {
+                      "type": "object",
+                      "description": "Pagination cursor for the next page when more workflows exist.",
+                      "additionalProperties": true
+                    },
+                    "hasMoreItemsToFetch": {
+                      "type": "boolean",
+                      "description": "Whether more workflows exist beyond this page."
                     }
                   },
                   "additionalProperties": false
@@ -1965,13 +2067,13 @@
         }
       ],
       "post": {
-        "description": "Manually trigger a bot workflow for a conversation.",
+        "description": "Manually trigger a bot workflow for a conversation. Path `workflowId` must be URL-encoded.",
         "parameters": [
           {
             "name": "workflowId",
             "in": "path",
             "required": true,
-            "description": "Workflow identifier.",
+            "description": "Workflow identifier. Must be URL-encoded when used in the path.",
             "schema": {
               "type": "string"
             }
@@ -1996,14 +2098,14 @@
                     "type": "string",
                     "description": "Customer phone number identifier."
                   },
-                  "startFromNodeId": {
-                    "type": "string",
-                    "description": "Optional workflow node identifier to start execution from."
-                  },
                   "triggerData": {
                     "type": "object",
                     "description": "Optional JSON object passed to the workflow when it is triggered.",
                     "additionalProperties": true
+                  },
+                  "startWithNodeId": {
+                    "type": "string",
+                    "description": "Optional workflow node identifier to start execution from."
                   }
                 },
                 "additionalProperties": false
@@ -2193,7 +2295,7 @@
     },
     "/webhook/{webhookId}": {
       "delete": {
-        "description": "Deletes a webhook by ID.",
+        "description": "Deletes a webhook by ID. Path `webhookId` must be URL-encoded.",
         "security": [
           {
             "bearerAuth": [],
@@ -2205,7 +2307,7 @@
             "name": "webhookId",
             "in": "path",
             "required": true,
-            "description": "ID of the webhook to delete",
+            "description": "Webhook identifier. Must be URL-encoded when used in the path.",
             "schema": {
               "type": "string"
             }
