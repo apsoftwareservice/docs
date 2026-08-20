@@ -192,6 +192,52 @@
         }
       }
     },
+    "/conversation/statuses": {
+      "get": {
+        "description": "Returns all custom conversation statuses for the authenticated business. These are business-defined status labels (title and color), not the conversation `statusCase` (`open` / `closed` / `standby`).",
+        "responses": {
+          "200": {
+            "description": "Conversation statuses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statuses": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ConversationStatusDefinition"
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/conversations/{id}/status": {
       "post": {
         "description": "Set the status of a conversation. Path `id` is the conversation `participantsIdentifiers` (URL-encoded).",
@@ -3206,6 +3252,38 @@
           },
           "event": {
             "$ref": "#/components/schemas/WebhookEvent"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConversationStatusDefinition": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "color",
+          "associatedTo"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the status"
+          },
+          "title": {
+            "type": "string",
+            "description": "Human-readable status title"
+          },
+          "color": {
+            "type": "string",
+            "description": "Status color (hex, rgb, or named color)"
+          },
+          "associatedTo": {
+            "type": "string",
+            "description": "Business or account the status is associated with"
+          },
+          "isSelected": {
+            "type": "boolean",
+            "description": "Whether this status is selected in the UI"
           }
         },
         "additionalProperties": false

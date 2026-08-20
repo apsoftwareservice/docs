@@ -72,6 +72,12 @@
             ]
           },
           {
+            "group": "Statuses",
+            "pages": [
+              "api-reference/conversation/statuses-get-all"
+            ]
+          },
+          {
             "group": "Agents",
             "pages": [
               "api-reference/conversation/agents/get-all",
