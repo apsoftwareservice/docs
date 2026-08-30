@@ -1161,6 +1161,116 @@
         }
       }
     },
+    "/tasks/list": {
+      "servers": [
+        {
+          "url": "https://business.pingmee.co.il",
+          "description": "Business service"
+        }
+      ],
+      "post": {
+        "summary": "Get tasks",
+        "description": "Returns tasks using cursor-based pagination. Default page size is 25; the maximum is 100.",
+        "requestBody": {
+          "description": "Pagination and filter parameters. Send an empty object `{}` to use defaults.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [],
+                "properties": {
+                  "phoneNumberId": {
+                    "type": "string",
+                    "description": "Filter tasks by business phone number identifier."
+                  },
+                  "agentId": {
+                    "type": "string",
+                    "description": "Filter tasks assigned to this agent."
+                  },
+                  "participantsIdentifiers": {
+                    "type": "string",
+                    "description": "Filter tasks linked to this conversation (`participantsIdentifiers`)."
+                  },
+                  "lastEvaluatedKey": {
+                    "type": "object",
+                    "description": "Key returned from a previous request. Pass this value to fetch the next page of tasks.",
+                    "additionalProperties": false
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 25,
+                    "minimum": 1,
+                    "maximum": 100,
+                    "description": "Maximum number of tasks to return."
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Tasks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "dbObject": {
+                      "type": "array",
+                      "description": "List of tasks returned for this page of results.",
+                      "items": {
+                        "$ref": "#/components/schemas/Task"
+                      }
+                    },
+                    "hasMoreItemsToFetch": {
+                      "type": "boolean"
+                    },
+                    "lastEvaluatedKey": {
+                      "type": "object",
+                      "description": "If present, call the same endpoint again and pass this value as `lastEvaluatedKey` to retrieve the next page of results. Pagination is cursor-based, not page-number based.",
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tasks/{taskId}": {
       "servers": [
         {
@@ -1246,7 +1356,7 @@
       },
       "patch": {
         "summary": "Update task",
-        "description": "Partial update — send only the fields you want to change. The server always refreshes `updatedAt` and `agentIdentification`, and increments `unreadCount`.\n\nUpdatable fields: `title`, `body`, `statusCase`, `assignedAgentIds`, `viewedByAgentIds`, `dueDate`, `isRecurring`, `recurringAtDate`, `participantsIdentifiers`, `phoneNumberId`.",
+        "description": "Partial update — send only the fields you want to change. The server always refreshes `updatedAt` and `agentIdentification`, and increments `unreadCount`.\n\nUpdatable fields: `title`, `body`, `statusCase`, `assignedAgentIds`, `viewedByAgentIds`, `dueDate`, `participantsIdentifiers`, `phoneNumberId`.",
         "parameters": [
           {
             "name": "taskId",
@@ -2809,8 +2919,7 @@
           "agentIdentification",
           "createdAt",
           "updatedAt",
-          "dueDate",
-          "isRecurring"
+          "dueDate"
         ],
         "properties": {
           "taskId": {
@@ -2866,14 +2975,6 @@
             "type": "number",
             "description": "Unix timestamp (seconds) for the due date. `0` when unset."
           },
-          "isRecurring": {
-            "type": "boolean",
-            "description": "Whether the task repeats."
-          },
-          "recurringAtDate": {
-            "type": "number",
-            "description": "Unix timestamp (seconds) of the next recurrence. `0` when unset."
-          },
           "phoneNumberId": {
             "type": "string",
             "description": "Business phone number identifier used to scope the task."
@@ -2921,14 +3022,6 @@
           "dueDate": {
             "type": "number",
             "description": "Unix timestamp (seconds) for the due date. `0` to unset."
-          },
-          "isRecurring": {
-            "type": "boolean",
-            "description": "Whether the task repeats."
-          },
-          "recurringAtDate": {
-            "type": "number",
-            "description": "Unix timestamp (seconds) of the next recurrence. `0` to unset."
           },
           "participantsIdentifiers": {
             "type": "string",

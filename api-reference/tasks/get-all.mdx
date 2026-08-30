@@ -1,0 +1,9 @@
+---
+title: 'Get Tasks'
+openapi: 'POST /tasks/list'
+lastUpdatedDate: "2026-08-30"
+timestamp: true
+
+---
+
+Send an empty object `{}` for the first page. Page size defaults to **25** and is capped at **100**. If `lastEvaluatedKey` is present in the response, pass it back in the next request to load the following page.
