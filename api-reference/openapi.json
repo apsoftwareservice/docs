@@ -1170,7 +1170,7 @@
       ],
       "post": {
         "summary": "Get tasks",
-        "description": "Returns tasks using cursor-based pagination. Default page size is 25; the maximum is 100.",
+        "description": "Returns tasks using cursor-based pagination. Default page size is 50; the maximum is 100.",
         "requestBody": {
           "description": "Pagination and filter parameters. Send an empty object `{}` to use defaults.",
           "content": {
@@ -1198,7 +1198,7 @@
                   },
                   "limit": {
                     "type": "integer",
-                    "default": 25,
+                    "default": 50,
                     "minimum": 1,
                     "maximum": 100,
                     "description": "Maximum number of tasks to return."
