@@ -1161,6 +1161,259 @@
         }
       }
     },
+    "/tasks/{taskId}": {
+      "servers": [
+        {
+          "url": "https://business.pingmee.co.il",
+          "description": "Business service"
+        }
+      ],
+      "get": {
+        "summary": "Get task",
+        "description": "Returns a single task by ID.",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "description": "Task identifier returned when the task was created.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "task"
+                  ],
+                  "properties": {
+                    "task": {
+                      "$ref": "#/components/schemas/Task"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update task",
+        "description": "Partial update — send only the fields you want to change. The server always refreshes `updatedAt` and `agentIdentification`, and increments `unreadCount`.\n\nUpdatable fields: `title`, `body`, `statusCase`, `assignedAgentIds`, `viewedByAgentIds`, `dueDate`, `isRecurring`, `recurringAtDate`, `participantsIdentifiers`, `phoneNumberId`.",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "description": "Task identifier returned when the task was created.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Fields to update. Omit fields you do not want to change.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTask"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Task updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "task"
+                  ],
+                  "properties": {
+                    "task": {
+                      "$ref": "#/components/schemas/Task"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete task",
+        "description": "Deletes a single task by ID.",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "description": "Task identifier returned when the task was created.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "taskId"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "taskId": {
+                      "type": "string",
+                      "description": "Identifier of the deleted task."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/templates/send": {
       "servers": [
         {
@@ -2540,6 +2793,150 @@
           "phoneNumber": {
             "type": "string",
             "description": "Editable phone number controlled by the business"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Task": {
+        "type": "object",
+        "required": [
+          "taskId",
+          "title",
+          "body",
+          "associatedTo",
+          "statusCase",
+          "unreadCount",
+          "agentIdentification",
+          "createdAt",
+          "updatedAt",
+          "dueDate",
+          "isRecurring"
+        ],
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "description": "Unique task identifier."
+          },
+          "title": {
+            "type": "string",
+            "description": "Task title."
+          },
+          "body": {
+            "type": "string",
+            "description": "Task description / notes."
+          },
+          "associatedTo": {
+            "type": "string",
+            "description": "Business or account the task is associated with."
+          },
+          "statusCase": {
+            "type": "string",
+            "description": "Task status. Built-in values are `open`, `standby` (in progress), and `completed`. Custom task status IDs defined for the business are also accepted."
+          },
+          "unreadCount": {
+            "type": "integer",
+            "description": "Needs-attention counter. Starts at 1 on create and increments on every update."
+          },
+          "agentIdentification": {
+            "$ref": "#/components/schemas/AgentIdentification"
+          },
+          "assignedAgentIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Agent IDs assigned to this task."
+          },
+          "viewedByAgentIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Agent IDs that have viewed this task."
+          },
+          "createdAt": {
+            "type": "number",
+            "description": "Unix timestamp (seconds) when the task was created."
+          },
+          "updatedAt": {
+            "type": "number",
+            "description": "Unix timestamp (seconds) when the task was last updated."
+          },
+          "dueDate": {
+            "type": "number",
+            "description": "Unix timestamp (seconds) for the due date. `0` when unset."
+          },
+          "isRecurring": {
+            "type": "boolean",
+            "description": "Whether the task repeats."
+          },
+          "recurringAtDate": {
+            "type": "number",
+            "description": "Unix timestamp (seconds) of the next recurrence. `0` when unset."
+          },
+          "phoneNumberId": {
+            "type": "string",
+            "description": "Business phone number identifier used to scope the task."
+          },
+          "participantsIdentifiers": {
+            "type": "string",
+            "description": "Conversation participants identifiers this task is linked to."
+          },
+          "customer": {
+            "$ref": "#/components/schemas/Customer"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateTask": {
+        "type": "object",
+        "description": "Partial task update. Include only the fields you want to change. `unreadCount`, `updatedAt`, and `agentIdentification` are set by the server.",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Task title."
+          },
+          "body": {
+            "type": "string",
+            "description": "Task description / notes."
+          },
+          "statusCase": {
+            "type": "string",
+            "description": "Task status. Built-in values are `open`, `standby` (in progress), and `completed`. Custom task status IDs defined for the business are also accepted."
+          },
+          "assignedAgentIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Agent IDs assigned to this task. Replaces the full assignment list."
+          },
+          "viewedByAgentIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Agent IDs that have viewed this task."
+          },
+          "dueDate": {
+            "type": "number",
+            "description": "Unix timestamp (seconds) for the due date. `0` to unset."
+          },
+          "isRecurring": {
+            "type": "boolean",
+            "description": "Whether the task repeats."
+          },
+          "recurringAtDate": {
+            "type": "number",
+            "description": "Unix timestamp (seconds) of the next recurrence. `0` to unset."
+          },
+          "participantsIdentifiers": {
+            "type": "string",
+            "description": "Conversation participants identifiers this task is linked to."
+          },
+          "phoneNumberId": {
+            "type": "string",
+            "description": "Business phone number identifier used to scope the task."
           }
         },
         "additionalProperties": false

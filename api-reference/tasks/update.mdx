@@ -1,0 +1,24 @@
+---
+title: 'Update Task'
+openapi: 'PATCH /tasks/{taskId}'
+lastUpdatedDate: "2026-08-30"
+timestamp: true
+
+---
+
+<Note>
+  Call this endpoint on the business service: `https://business.pingmee.co.il`.
+</Note>
+
+Partial update — send only the fields you want to change. For example, to update title and status:
+
+```json
+{
+  "title": "Call back tomorrow",
+  "statusCase": "standby"
+}
+```
+
+Updatable fields: `title`, `body`, `statusCase`, `assignedAgentIds`, `viewedByAgentIds`, `dueDate`, `isRecurring`, `recurringAtDate`, `participantsIdentifiers`, `phoneNumberId`.
+
+The server always refreshes `updatedAt` and `agentIdentification`, and increments `unreadCount`.
