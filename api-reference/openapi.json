@@ -49,6 +49,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-conversation-tags",
+            "description": "Returns all conversation tags"
+          }
         }
       },
       "post": {
@@ -85,12 +92,26 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-conversation-tags",
+            "description": "Creates a new conversation tag"
+          }
         }
       },
       "put": {
         "description": "Conversation tag created",
         "responses": {
           "201": {
+            "description": "Conversation tag created"
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "put-conversation-tags",
             "description": "Conversation tag created"
           }
         }
@@ -142,6 +163,11 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": false
+          }
         }
       },
       "get": {
@@ -189,6 +215,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-conversation-tags-id",
+            "description": "Returns a conversation tag"
+          }
         }
       }
     },
@@ -234,6 +267,13 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-conversation-statuses",
+            "description": "Returns all custom conversation statuses for the authenticated business. These are business-defined status labels (title and color), not the conversation `statusCase` (`open` / `closed` / `standby`)."
           }
         }
       }
@@ -330,7 +370,14 @@
               "type": "string"
             }
           }
-        ]
+        ],
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-conversations-id-status",
+            "description": "Set the status of a conversation. Path `id` is the conversation `participantsIdentifiers` (URL-encoded)."
+          }
+        }
       }
     },
     "/conversations/{id}/answer-mode": {
@@ -395,6 +442,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-conversations-id-answer-mode",
+            "description": "Set the answer mode for a conversation. Path `id` is the conversation `participantsIdentifiers` (URL-encoded)."
+          }
         }
       }
     },
@@ -452,6 +506,13 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-conversations-id",
+            "description": "Get a single conversation by participants identifiers. Path `id` must be URL-encoded."
           }
         }
       }
@@ -526,6 +587,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-conversations-id-agents",
+            "description": "Associate agents to a conversation. Path `id` is the conversation `participantsIdentifiers` (URL-encoded)."
+          }
         }
       },
       "delete": {
@@ -597,6 +665,11 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": false
+          }
         }
       }
     },
@@ -648,6 +721,13 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-conversations-id-tags",
+            "description": "Returns the tag IDs assigned to a conversation. Path `id` is the conversation `participantsIdentifiers` (URL-encoded)."
           }
         }
       },
@@ -706,6 +786,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-conversations-id-tags",
+            "description": "Assigns one or more tags to a conversation. Path `id` is the conversation `participantsIdentifiers` (URL-encoded)."
+          }
         }
       },
       "delete": {
@@ -761,6 +848,11 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": false
           }
         }
       }
@@ -847,6 +939,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-conversations",
+            "description": "Get conversations using cursor-based pagination."
+          }
         }
       }
     },
@@ -922,6 +1021,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-customers",
+            "description": "Returns all customers using pagination"
+          }
         }
       },
       "put": {
@@ -973,6 +1079,13 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "put-customers",
+            "description": "Creates one or more customers."
           }
         }
       }
@@ -1049,6 +1162,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-customers-id",
+            "description": "Updates editable customer fields. This is a partial update — only include the fields you want to change. `customerName` is not updatable here.\n\nUpdatable fields: `customerNickname`, `email`, `description`, `phoneNumber`."
+          }
         }
       },
       "delete": {
@@ -1101,6 +1221,11 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": false
           }
         }
       },
@@ -1157,6 +1282,13 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-customers-id",
+            "description": "Returns a Customer"
           }
         }
       }
@@ -1268,6 +1400,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-tasks-list",
+            "description": "Returns tasks using cursor-based pagination. Default page size is 50; the maximum is 100."
+          }
         }
       }
     },
@@ -1351,6 +1490,13 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-tasks-taskId",
+            "description": "Returns a single task by ID."
           }
         }
       },
@@ -1439,6 +1585,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "patch-tasks-taskId",
+            "description": "Partial update — send only the fields you want to change. The server always refreshes `updatedAt` and `agentIdentification`, and increments `unreadCount`.\n\nUpdatable fields: `title`, `body`, `statusCase`, `assignedAgentIds`, `viewedByAgentIds`, `dueDate`, `participantsIdentifiers`, `phoneNumberId`."
+          }
         }
       },
       "delete": {
@@ -1520,6 +1673,11 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": false
           }
         }
       }
@@ -1637,6 +1795,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-templates-send",
+            "description": "Send a WhatsApp template message"
+          }
         }
       }
     },
@@ -1707,6 +1872,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-phone-numbers",
+            "description": "Get business phone numbers"
+          }
         }
       }
     },
@@ -1774,6 +1946,13 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-templates",
+            "description": "Get WhatsApp templates for a specific phone number"
           }
         }
       },
@@ -1951,6 +2130,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-sendMessage",
+            "description": "Send a message"
+          }
         }
       }
     },
@@ -1997,6 +2183,13 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-getMessages",
+            "description": "Fetches messages for a conversation identified by the business phone number and the customer (target) phone number. Results are ordered newest first. Omit `startKey` on the first request. For each following batch, set `startKey` to the `lastEvaluatedKey` value returned by the previous response."
           }
         }
       }
@@ -2056,6 +2249,13 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-agents",
+            "description": "Returns all agents associated with the authenticated account."
           }
         }
       }
@@ -2134,6 +2334,13 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-agents-id",
+            "description": "Returns a single agent by ID (email). Path `id` must be URL-encoded."
           }
         }
       }
@@ -2225,6 +2432,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-ai-agents",
+            "description": "Returns a flat paginated list of AI agents for the authenticated business. Pass `flat=true` to skip folder grouping. Distinct from human agents under `/agents`."
+          }
         }
       }
     },
@@ -2289,6 +2503,13 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-ai-agents-id",
+            "description": "Returns a single AI agent by ID, including vector store files when available. Path `id` must be URL-encoded."
           }
         }
       },
@@ -2378,6 +2599,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "put-ai-agents-id",
+            "description": "Updates an AI agent. Supported fields: `name`, `description`, `roles`, and `vectorStore.required`. Changed roles regenerate their OpenAI function tools.\n\n**Field length limits** (same as the Pingmee app; exceeding them returns `400`):\n\n| Field | Max length |\n| --- | --- |\n| `description` | 5000 |\n| `roles[].name` | 40 |\n| `roles[].description` | 1500 |\n| `roles[].instructions` | 1500 |\n| `roles[].webhook` | 300 |\n\nPath `id` must be URL-encoded."
+          }
         }
       }
     },
@@ -2464,6 +2692,13 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-workflows",
+            "description": "Returns the workflow data."
           }
         }
       }
@@ -2564,6 +2799,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-workflows-workflowId-trigger",
+            "description": "Manually trigger a bot workflow for a conversation. Path `workflowId` must be URL-encoded."
+          }
         }
       }
     },
@@ -2605,6 +2847,13 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-webhook",
+            "description": "Returns all webhooks for the authenticated account."
           }
         }
       },
@@ -2699,6 +2948,13 @@
               }
             }
           }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-webhook",
+            "description": "Creates a new webhook subscription."
+          }
         }
       }
     },
@@ -2745,6 +3001,11 @@
                 }
               }
             }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": false
           }
         }
       }
@@ -3796,6 +4057,11 @@
         "name": "x-api-key",
         "description": "Business API key from Pingmee Settings → Developer Tools"
       }
+    }
+  },
+  "x-mint": {
+    "mcp": {
+      "enabled": true
     }
   }
 }
