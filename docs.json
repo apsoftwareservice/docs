@@ -74,7 +74,10 @@
           {
             "group": "Statuses",
             "pages": [
-              "api-reference/conversation/statuses-get-all"
+              "api-reference/conversation/statuses-get-all",
+              "api-reference/tasks/statuses-get-all",
+              "api-reference/tasks/statuses-create",
+              "api-reference/tasks/statuses-delete"
             ]
           },
           {
@@ -108,7 +111,10 @@
               "api-reference/tasks/get-all",
               "api-reference/tasks/get",
               "api-reference/tasks/update",
-              "api-reference/tasks/delete"
+              "api-reference/tasks/delete",
+              "api-reference/tasks/statuses-get-all",
+              "api-reference/tasks/statuses-create",
+              "api-reference/tasks/statuses-delete"
             ]
           }
         ]

@@ -1293,6 +1293,210 @@
         }
       }
     },
+    "/tasks/statuses": {
+      "servers": [
+        {
+          "url": "https://business.pingmee.co.il",
+          "description": "Business service"
+        }
+      ],
+      "get": {
+        "summary": "Get task statuses",
+        "description": "Returns all custom task statuses for the authenticated business. These are business-defined status labels (title and color), not the built-in task `statusCase` values (`open` / `standby` / `completed`).",
+        "responses": {
+          "200": {
+            "description": "Task statuses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statuses": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TaskStatusDefinition"
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-tasks-statuses",
+            "description": "Returns all custom task statuses for the authenticated business. These are business-defined status labels (title and color), not the built-in task `statusCase` values (`open` / `standby` / `completed`)."
+          }
+        }
+      }
+    },
+    "/tasks/status": {
+      "servers": [
+        {
+          "url": "https://business.pingmee.co.il",
+          "description": "Business service"
+        }
+      ],
+      "put": {
+        "summary": "Create task status",
+        "description": "Creates a custom task status. `title` and `color` are required. Titles must be unique for the business.",
+        "requestBody": {
+          "required": true,
+          "description": "Task status to create.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskStatus"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Task status created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskStatusDefinition"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, missing fields, or duplicate title",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "put-tasks-status",
+            "description": "Creates a custom task status. Title and color are required. Titles must be unique for the business."
+          }
+        }
+      }
+    },
+    "/tasks/status/{id}": {
+      "servers": [
+        {
+          "url": "https://business.pingmee.co.il",
+          "description": "Business service"
+        }
+      ],
+      "delete": {
+        "summary": "Delete task status",
+        "description": "Deletes a custom task status by ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Task status identifier returned when the status was created.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task status deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task status not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "delete-tasks-status-id",
+            "description": "Deletes a custom task status by ID."
+          }
+        }
+      }
+    },
     "/tasks/list": {
       "servers": [
         {
@@ -4035,6 +4239,56 @@
           "isSelected": {
             "type": "boolean",
             "description": "Whether this status is selected in the UI"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TaskStatusDefinition": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "color",
+          "associatedTo"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the status. Can be used as a task `statusCase`."
+          },
+          "title": {
+            "type": "string",
+            "description": "Human-readable status title"
+          },
+          "color": {
+            "type": "string",
+            "description": "Status color (hex, rgb, or named color)"
+          },
+          "associatedTo": {
+            "type": "string",
+            "description": "Business or account the status is associated with"
+          },
+          "isSelected": {
+            "type": "boolean",
+            "description": "Whether this status is selected in the UI"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateTaskStatus": {
+        "type": "object",
+        "required": [
+          "title",
+          "color"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Human-readable status title. Must be unique for the business."
+          },
+          "color": {
+            "type": "string",
+            "description": "Status color (hex, rgb, or named color)"
           }
         },
         "additionalProperties": false
