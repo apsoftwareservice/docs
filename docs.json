@@ -15,7 +15,8 @@
           {
             "group": "API documentation",
             "pages": [
-              "index"
+              "index",
+              "workflows-documentation"
             ]
           },
           {
