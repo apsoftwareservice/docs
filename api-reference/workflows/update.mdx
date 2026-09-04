@@ -1,0 +1,31 @@
+---
+title: 'Update Workflow'
+openapi: 'PUT /workflows/{workflowId}'
+lastUpdatedDate: "2026-09-04"
+timestamp: true
+
+---
+
+Partial update — send only the fields you want to change. URL-encode `workflowId` in the path.
+
+`name`, `isActive`, `settings`, and `associatedToBusinessId` can be sent alone. Create always stores a workflow inactive; activate without sending a graph:
+
+```json
+{
+  "isActive": true
+}
+```
+
+Set `associatedToBusinessId` (and `platformType` on **create**) from [GET phone numbers](/api-reference/business/get-phone-numbers). PUT persists `associatedToBusinessId` without a graph; `platformType` is stored from the create body.
+
+## Graph updates and optimistic lock
+
+If `data` or `parsedData` is present, this is a graph update. Also send `trigger`, `triggerType`, `variables`, and `lastModified` from the last [GET](/api-reference/workflows/get) or [create](/api-reference/workflows/create). Always send **both** `data` and `parsedData` plus `trigger` / `triggerType`.
+
+When `lastModified` does not match the server, the API returns **409** with the current `lastModified`. Reload and retry.
+
+A graph PUT **prunes** stored `analytics` for node / edge / button ids that are no longer on the graph. GET fresh analytics before you rewrite, and do not send `analytics` in the body. See [Workflow analytics](/build-workflows/analytics).
+
+<Note>
+Before building `data` or `parsedData`, read [Build workflows](/build-workflows/overview) and the related cookbook pages.
+</Note>

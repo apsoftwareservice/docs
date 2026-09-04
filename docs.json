@@ -15,8 +15,7 @@
           {
             "group": "API documentation",
             "pages": [
-              "index",
-              "workflows-documentation"
+              "index"
             ]
           },
           {
@@ -39,13 +38,6 @@
               "api-reference/conversation/tags-remove",
               "api-reference/conversation/agents/assign",
               "api-reference/conversation/agents/unassign"
-            ]
-          },
-          {
-            "group": "Workflows",
-            "pages": [
-              "api-reference/workflows/get-minimal",
-              "api-reference/workflows/trigger"
             ]
           },
           {
@@ -116,6 +108,39 @@
               "api-reference/tasks/statuses-get-all",
               "api-reference/tasks/statuses-create",
               "api-reference/tasks/statuses-delete"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Workflows",
+        "groups": [
+          {
+            "group": "Guides",
+            "pages": [
+              "workflows-documentation",
+              "build-workflows/overview",
+              "build-workflows/document",
+              "build-workflows/canvas-vs-execution",
+              "build-workflows/nodes-and-edges",
+              "build-workflows/variables",
+              "build-workflows/sub-nodes",
+              "build-workflows/sub-workflows",
+              "build-workflows/examples",
+              "build-workflows/analytics",
+              "build-workflows/rules"
+            ]
+          },
+          {
+            "group": "API",
+            "pages": [
+              "api-reference/workflows/get-minimal",
+              "api-reference/workflows/get",
+              "api-reference/workflows/create",
+              "api-reference/workflows/update",
+              "api-reference/workflows/create-folder",
+              "api-reference/workflows/trigger",
+              "api-reference/workflows/analytics-reset"
             ]
           }
         ]

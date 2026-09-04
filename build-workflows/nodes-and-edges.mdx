@@ -1,0 +1,246 @@
+---
+title: 'Nodes and edges'
+description: 'React Flow JSON, parsedData WorkflowNode shape, handle IDs, and NodeType fragments'
+---
+
+## Canvas node
+
+```json
+{
+  "id": "http_1",
+  "type": "httpRequest",
+  "category": "Action",
+  "position": { "x": 480, "y": 80 },
+  "draggable": true,
+  "selected": false,
+  "data": {
+    "isActive": true,
+    "method": "POST",
+    "url": "https://api.example.com/leads",
+    "contentType": "application/json",
+    "body": "{\"name\":\"{{1}}\"}"
+  }
+}
+```
+
+## Canvas edge
+
+```json
+{
+  "source": "trig_1",
+  "target": "http_1",
+  "sourceHandle": "out",
+  "targetHandle": "in",
+  "type": "buttonedge"
+}
+```
+
+Handles: root output `"out"`, every input `"in"`, sub-node output **also** `"in"`. See [Canvas vs execution](/build-workflows/canvas-vs-execution).
+
+## Execution `WorkflowNode`
+
+```json
+{
+  "id": "http_1",
+  "type": "httpRequest",
+  "category": "Action",
+  "title": "httpRequest",
+  "data": {},
+  "connections": { "out": ["upd_conv"] },
+  "subNodes": []
+}
+```
+
+`parentId` is set on sub-nodes only. `connections.out` is an array of target node ids.
+
+## NodeType catalog
+
+Ignore `stickyNote` (canvas decoration) and deprecated `assignTags` / `assignAgents` (use `updateConversation`).
+
+### Triggers — category `Trigger`
+
+Exactly **one** trigger. It lives in `data.nodes` and `workflow.trigger`, never in `parsedData`.
+
+| `type` | Required `data` keys | Fragment |
+| --- | --- | --- |
+| `pingmeeTrigger` | `eventType`, `platform` | `eventType`: `"Messages Created"` or `"New Conversation Started"`. Optional `keywords: ["hello"]`. Inbound reply — first WhatsApp node may be `messageType: "custom"`. Output catalog under `data.variables` (`customer.customerName`, `message`, …). |
+| `workflowTrigger` | (none required) | Child entry / starter. Same `variables` catalog. `triggerType` often omitted. Template required only when this trigger **opens** the thread (POST `/trigger`, campaign); a pointer child in an inbound run may use `custom`. |
+| `instagramTrigger` | `eventType`, `platform` | `eventType`: `"Comment on Instagram Post"`. Optional `keywords`, `post`. |
+| `facebookTrigger` | `eventType`, `platform` | `eventType`: `"Comment on Facebook Post"`. Optional `keywords`, `post`. |
+
+Manual [POST `/trigger`](/api-reference/workflows/trigger) `triggerData` is copied onto **whichever trigger type ran**. Read it with `return $<this-trigger-id>.triggerData.<key>;` — see [`triggerData`](/build-workflows/variables#triggerdata).
+
+```json
+{
+  "id": "trig_1",
+  "type": "pingmeeTrigger",
+  "category": "Trigger",
+  "data": {
+    "eventType": "Messages Created",
+    "platform": "whatsapp",
+    "keywords": ["hello", "start"],
+    "isActive": true,
+    "variables": {
+      "var_cust_name": {
+        "id": "var_cust_name",
+        "name": "customer.customerName",
+        "parentId": "trig_1",
+        "valueType": "string"
+      }
+    }
+  }
+}
+```
+
+### Actions — category `Action`
+
+| `type` | Required `data` keys | Fragment |
+| --- | --- | --- |
+| `whatsapp` | `platform: "whatsapp"` | Infer starter vs reply first ([WhatsApp templates](#whatsapp-templates)). `messageType`: `"custom"` \| `"template"` \| `"ai"`. Meta catalog send also needs `templateType: "whatsapp"`. Wait-for-reply: `waitForUserResponse: true` plus `answer` sub-nodes (max 10). **No public upload API** — text / template body only unless `attachmentS3Id` is already known. |
+| `facebookMessenger` | `platform` | Same message shape. Answer limit 13. |
+| `instagram` | `platform` | Same message shape. Answer limit 13. |
+| `webchat` | `platform: "web"` | Same message shape. Answer limit 8. |
+| `httpRequest` | `method`, `url` | `method`: `GET` \| `POST` \| `PUT` \| `PATCH` \| `DELETE`. `body` may contain `{{n}}` slots bound in `bodyVariables`. Optional `headers` (`["Content-Type: application/json"]`), `contentType`, `queryParams`, `responseMapping`. |
+| `fireberry` | `table`, `action` | `action`: `"Create"` \| `"Create If None Exist"` \| `"Update Record"`. Match row with `objectField` + `objectVariable` and/or `queries[]`. Use generic table/field names — never copy a customer's CRM schema. |
+| `task` | `task` | `task.title` / `task.body` may contain `{{n}}` bound by `titleVariables` / `bodyVariables`. Optional `task.statusCase` (`open`). |
+| `wait` | `timerInfo` | `{ "hours": "0", "minutes": "15", "seconds": "0", "numberOfSeconds": 900 }`. Max ~82 000 seconds. |
+| `updateConversation` | (all optional) | `selectedTags`, `selectedAgents`, `answerMode`: `"bot"` \| `"manual"` \| `"ai"`, `status`: `"open"` \| `"closed"` \| `"standby"`, `optoutFromMarketingMessage`, `autoTranslation`, `aiSummarize`. |
+| `updateCustomer` | (all optional) | `phoneNumber`, `email`, `customerNickname` — each is a Variable / Expression (`parentId` = upstream node), not a raw PII string. |
+| `ai` | `aiOption` | `"answerWithAI"` or `"summarizeConversation"`. Summarize exposes `data.variables` `{ name: "summary", parentId: <this node id> }`. |
+
+### WhatsApp templates
+
+The first WhatsApp node is **not** always a template. Infer from user intent:
+
+| User intent | Trigger | First WhatsApp node |
+| --- | --- | --- |
+| Reply / keyword / inbound | `pingmeeTrigger` (`Messages Created`, `New Conversation Started`) | `messageType: "custom"` OK. Do not call GET `/templates` unless the user named a template. |
+| Starter / outbound / “send this to customers” / API trigger | `workflowTrigger` | `messageType: "template"` + `templateType: "whatsapp"`. [GET /templates](/api-reference/business/get-templates). |
+
+Meta requires an **approved template** when the business **opens** a WhatsApp conversation (outside the 24-hour customer-care window). Pingmee encodes that as a message node with both `messageType: "template"` and `templateType: "whatsapp"`. A `workflowTrigger` **child** reached from a [pointer](/build-workflows/sub-workflows) during an inbound run is still in-session — `custom` is OK.
+
+| Field | Value for a Meta catalog send |
+| --- | --- |
+| `messageType` | `"template"` (board mode). `"custom"` is a session/interactive message; `"ai"` is answer-with-AI. |
+| `templateType` | `"whatsapp"` — **this** is what the runtime checks (`MessageTemplateType.whatsapp`). Company/private templates are not Meta HSM sends. |
+| `templateInformation` | Copy an **APPROVED** object from [GET /templates](/api-reference/business/get-templates) (`name`, `language`, `category`, `id`, `status`, `components`, `allow_category_change`). Do not invent `name` / `language`. |
+| `bodyVariables` | Map keyed by placeholder index (`"1"`, `"2"`, …) matching `BODY` `{{n}}`. Each value is a Fixed / Expression / Custom object ([Variables](/build-workflows/variables)). |
+| `headerVariables` | Same shape for a **text** HEADER `{{n}}`. IMAGE / VIDEO / DOCUMENT headers need `components[].attachmentS3Id` — agents cannot upload media (see below). |
+| `buttonVariables` | Optional. Dynamic URL / coupon suffixes keyed by **button index** (0-based) in the BUTTONS component. |
+
+**When `messageType: "template"`**
+
+- Starter: `workflowTrigger` + [POST /trigger](/api-reference/workflows/trigger) / campaign-style send that **opens** the thread — the **first** WhatsApp node must be a template.
+- Any send after the 24-hour window has closed.
+- The user asked for a **named** catalog template on a reply bot.
+
+**When `messageType: "custom"` is OK**
+
+- Reply bot: inbound `pingmeeTrigger` with `eventType: "Messages Created"` or `"New Conversation Started"` (the customer just wrote; the window is open). First node can be custom text.
+- Later nodes in the **same** run after the customer has already replied to a template.
+- Pointer child continuing an inbound session.
+
+**Fetch and map** (starter only, or a named template)
+
+1. Bind the workflow phone ([Platform binding](/build-workflows/document#platform-binding)).
+2. `GET https://api.pingmee.co.il/templates?type=whatsapp&phoneNumberId=<associatedToBusinessId>`.
+3. Keep `status === "APPROVED"`. Skip PENDING / REJECTED.
+4. Prefer BODY-only or BODY + QUICK_REPLY / URL buttons. If HEADER `format` is `IMAGE`, `VIDEO`, or `DOCUMENT` and no `attachmentS3Id` is on that component, **do not use that template** via API.
+5. Paste the template into `data.templateInformation` on both the canvas node and the `parsedData` node.
+6. Bind every `{{n}}` in BODY (and text HEADER). Missing keys send empty parameters and Meta rejects the send.
+7. If BUTTONS include `QUICK_REPLY`, set `waitForUserResponse: true` and add matching `answer` sub-nodes (`label` = button `text`, `index` 0-based). Outgoing edges from those answers use `sourceHandle: "in"`.
+
+Reply snippet: [Examples — Pingmee trigger + keywords](/build-workflows/examples#pingmee-trigger--keywords). Starter snippet: [Examples — conversation opener](/build-workflows/examples#conversation-opener-meta-template).
+
+**Attachments (limitation)**
+
+There is **no** documented public upload API for agents. The board uploads blob URLs on save into `attachmentS3Id`. An AI authoring via REST must stay **text / template-only** unless an `attachmentS3Id` is already stored on the template component from a previous GUI save. Never put `blob:` URLs or arbitrary CDN links in `templateInformation.attachment` or `header_handle`.
+
+```json
+{
+  "type": "httpRequest",
+  "data": {
+    "method": "POST",
+    "url": "https://api.example.com/leads",
+    "contentType": "application/json",
+    "body": "{\"name\":\"{{1}}\",\"phone\":\"{{2}}\"}",
+    "bodyVariables": {
+      "1": { "id": "var_cust_name", "name": "customer.customerName", "parentId": "trig_1", "valueType": "string" },
+      "2": { "id": "var_cust_phone", "name": "customer.phoneNumber", "parentId": "trig_1", "valueType": "string" }
+    }
+  }
+}
+```
+
+```json
+{
+  "type": "fireberry",
+  "data": {
+    "action": "Create If None Exist",
+    "table": { "name": "Contacts", "objectType": "1" },
+    "objectField": { "fieldName": "telephone", "label": "Phone" },
+    "objectVariable": { "id": "var_cust_phone", "name": "customer.phoneNumber", "parentId": "trig_1", "valueType": "string" },
+    "queries": [
+      {
+        "id": "q1",
+        "field": { "fieldName": "telephone", "label": "Phone" },
+        "value": { "id": "var_cust_phone", "name": "customer.phoneNumber", "parentId": "trig_1", "valueType": "string" }
+      }
+    ]
+  }
+}
+```
+
+### Conditions — category `Condition`
+
+| `type` | Required `data` keys | Fragment |
+| --- | --- | --- |
+| `if` | `conditions` | `evaluationMode`: `"ALL"` \| `"ANY"` (board). Runtime ANDs conditions in order. Two `conditionEvaluation` children titled `true` / `false`. |
+| `switch` | (cases on children) | Each `switchCaseEvaluation` child has `conditions` + `evaluationMode`. Optional `noSelectionFallback`. First matching case wins. Limit 25 cases. |
+
+```json
+{
+  "type": "if",
+  "data": {
+    "evaluationMode": "ALL",
+    "conditions": [
+      {
+        "id": "c1",
+        "firstValue": { "id": "var_cust_name", "name": "customer.customerName", "parentId": "trig_1", "valueType": "string" },
+        "comparison": "Is Empty"
+      }
+    ]
+  }
+}
+```
+
+`comparison` strings: `"Equals"`, `"Not Equal"`, `"Greater than"`, `"Greater than or equal"`, `"Less than"`, `"Less than or equal"`, `"Contains"`, `"Is Empty"`, `"Is Not Empty"`. `Contains` expects `secondValue` as `[{ "label": "hello" }]`.
+
+### Operations — category `Operation`
+
+| `type` | Required `data` keys | Fragment |
+| --- | --- | --- |
+| `workflowPointer` | `workflowId` | Also `workflowName`, `workflowFolderId`. Target must be **active** and start with `workflowTrigger`. See [Sub-workflows](/build-workflows/sub-workflows). |
+
+```json
+{
+  "type": "workflowPointer",
+  "data": {
+    "workflowId": "wf_child_support",
+    "workflowName": "Child support",
+    "workflowFolderId": "folder_main"
+  }
+}
+```
+
+### Sub-nodes
+
+| `type` | Parent | `data` keys |
+| --- | --- | --- |
+| `answer` | Message nodes | `label`, `index`, `editable`, `removable`. Optional `buttonPayload`, `carouselCardIndex`. |
+| `conditionEvaluation` | `if` | `label` / execution `title` must be `true` or `false`. |
+| `switchCaseEvaluation` | `switch` | `label`, `conditions`, `evaluationMode`. |
+| `noSelectionFallback` | Message or `switch` | `label` (often `"Fallback"`), optional `shouldSendReplyMessage`, `unknownAnswerReplyMessage`. |
+| `awaitResponseTimeout` | Message | `label` `"Timeout"`, `shouldTimeoutExecution`, `timerInfo`. |
+
+Full parenting rules: [Sub-nodes](/build-workflows/sub-nodes).

@@ -1,34 +1,49 @@
 ---
 title: 'Workflow node documentation'
-description: 'Node catalog, board concepts, and workflow-building guides on the dedicated Workflow Docs site'
+description: 'Where to author workflows via MCP, and when the board UI catalog is optional'
 ---
 
-This API site documents **REST endpoints** for workflows (`GET /workflows`, `POST /workflows/{workflowId}/trigger`, etc.). It does **not** include the full **node catalog** (WhatsApp fields, conditions, triggers, board UI).
+To **author and save** a workflow (nodes, edges, variables, sub-nodes, pointers), use **this** site:
 
-For node-level guides, use the **Workflow Docs** site:
+| Resource | URL |
+| -------- | --- |
+| Build workflows cookbook | [Build a workflow](/build-workflows/overview) |
+| Workflows REST | [List](/api-reference/workflows/get-minimal), [get](/api-reference/workflows/get), [create](/api-reference/workflows/create), [update](/api-reference/workflows/update), [create folder](/api-reference/workflows/create-folder), [trigger](/api-reference/workflows/trigger), [reset analytics](/api-reference/workflows/analytics-reset) |
+| MCP | [docs.pingmee.co.il/mcp](https://docs.pingmee.co.il/mcp) |
+
+That MCP is sufficient. Register one server:
+
+```json
+{
+  "mcpServers": {
+    "pingmee-api": {
+      "url": "https://docs.pingmee.co.il/mcp"
+    }
+  }
+}
+```
+
+| Question type | Use |
+| ------------- | --- |
+| Create / GET / PUT a workflow, dual-graph JSON, variables, sub-nodes, pointers | `pingmee-api` (this site) |
+| Bind a WhatsApp phone; fetch templates only for starter/outbound (or a named template) | [GET phone numbers](/api-reference/business/get-phone-numbers), [GET templates](/api-reference/business/get-templates) — [infer starter vs reply](/build-workflows/overview#infer-starter-vs-reply) |
+| Analyze canvas analytics then improve the graph | GET `analytics` on the workflow, then PUT — [Workflow analytics](/build-workflows/analytics) |
+| Board UI labels, form screenshots, Hebrew node guides | Optional Workflow Docs (below) |
+
+## Optional — Workflow Docs (board UI)
+
+[docs-workflows.pingmee.co.il](https://docs-workflows.pingmee.co.il/docs) is a human UI catalog (drawer, forms, screenshots). You do **not** need its MCP to build or save a graph.
 
 | Resource | URL |
 | -------- | --- |
 | Documentation | [docs-workflows.pingmee.co.il/docs](https://docs-workflows.pingmee.co.il/docs) |
 | LLM index (`llms.txt`) | [docs-workflows.pingmee.co.il/llms.txt](https://docs-workflows.pingmee.co.il/llms.txt) |
 | Full corpus (`llms-full.txt`) | [docs-workflows.pingmee.co.il/llms-full.txt](https://docs-workflows.pingmee.co.il/llms-full.txt) |
-| MCP server | [docs-workflows.pingmee.co.il/mcp](https://docs-workflows.pingmee.co.il/mcp) |
+| MCP (optional) | [docs-workflows.pingmee.co.il/mcp](https://docs-workflows.pingmee.co.il/mcp) |
 
-## What's on Workflow Docs
+What's on Workflow Docs: trigger/action/condition form copy, nodes drawer, board toolbar, sticky notes. English and Hebrew (`/docs` and `/he/docs`).
 
-- **Triggers** — Pingmee, Instagram, Facebook, Workflow Trigger
-- **Actions** — WhatsApp, Messenger, Instagram, AI, HTTP, Fireberry, Task, Wait, Update Conversation/Customer
-- **Conditions** — If/Else, Switch, Filter
-- **Operations** — Sub-workflow, pointer, split, merge
-- **Concepts** — Variables, sub-nodes, nodes drawer, board toolbar, sticky notes
-
-English and Hebrew guides are available (`/docs` and `/he/docs`).
-
-## For AI agents and MCP clients
-
-The MCP server on **this** site (`docs.pingmee.co.il/mcp`) indexes **API reference and integration guides only**. It does not search Workflow Docs.
-
-Register **both** MCP servers:
+If you add the optional MCP:
 
 ```json
 {
@@ -43,13 +58,4 @@ Register **both** MCP servers:
 }
 ```
 
-| Question type | Use |
-| ------------- | --- |
-| API auth, send message, get conversations, trigger workflow via REST | `pingmee-api` |
-| Node fields, board UI, how to configure WhatsApp template in a flow | `pingmee-workflows` or fetch [llms-full.txt](https://docs-workflows.pingmee.co.il/llms-full.txt) |
-
-Workflow Docs MCP tools:
-
-- `search_workflows` — search node and concept pages
-- `query_docs_filesystem_workflows` — read pages (`cat /docs/nodes/actions/whatsapp.mdx`)
-- `list_pages` — documentation index (same as `llms.txt`)
+Workflow Docs tools: `search_workflows`, `query_docs_filesystem_workflows`, `list_pages`.

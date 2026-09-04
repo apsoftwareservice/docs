@@ -1,0 +1,66 @@
+---
+title: 'Hard rules'
+description: 'Failures that look silent: 409, inactive child, missing parsedData, wrong handles'
+---
+
+## Must do
+
+- Send **both** `data` and `parsedData` plus `trigger` / `triggerType` on any graph save.
+- Keep the same node ids on the canvas, in `parsedData`, on `trigger`, and in every edge / `connections.out`.
+- Create is always inactive. Activate with `PUT { "isActive": true }` (no graph fields).
+- Graph PUT: echo `lastModified` from the last GET or create, or the API returns **409**.
+- Leave `associatedTo` to the server (Cookie).
+- **Pick a phone before save.** [GET phone numbers](/api-reference/business/get-phone-numbers); if more than one, ask the user. Set `associatedToBusinessId` to that row’s `id` (not `associatedBusinessId` / WABA) and `platformType` on **create**. Optional `associatedToPlatformId` is the same id.
+- **Infer intent — do not force a template on reply bots.** The first WhatsApp node is a Meta template **only** when the bot **opens** the conversation. Use the table in [Infer starter vs reply](#infer-starter-vs-reply).
+- Copy **every** canvas edge into execution `connections.out` (same node ids). Root `sourceHandle` is `"out"`; sub-node `sourceHandle` is `"in"`; every `targetHandle` is `"in"`; edge `type` is `"buttonedge"`. See [How to wire a graph](/build-workflows/canvas-vs-execution#how-to-wire-a-graph).
+- Exactly **one** trigger node.
+- A [workflow pointer](/build-workflows/sub-workflows) target must exist, be **active**, and start with `workflowTrigger`.
+- Parameter slots are Fixed (`Variable`), Expression (`expression`), or Custom (`custom`). Check Custom first when reading JSON. See [Variables](/build-workflows/variables).
+- Copy Variable `parentId` from the producer node. Do not mint a new parent on a downstream binding.
+- Incoming run payload is `triggerData` on [POST /trigger](/api-reference/workflows/trigger). Read it with `return $<triggerNodeId>.triggerData.<key>;` — the `$…` id is the trigger **node** id, not the workflow id. See [Variables](/build-workflows/variables#triggerdata).
+- After **copying a node into another workflow**, rewrite every `$nodeId` inside Expression bodies to ids that exist in the destination (usually the new trigger). Stale `$oldId.triggerData…` does not resolve. Update Fixed `parentId`s the same way.
+- If/Else child titles must be `true` and `false` (case-insensitive).
+- WhatsApp answers: max 10. **No public media upload.** Text / template body only unless `attachmentS3Id` is already known — never put blob upload URLs in templates. Skip IMAGE / VIDEO / DOCUMENT header templates via API.
+- Before rewriting a live graph from analytics: [GET](/api-reference/workflows/get) first and read `analytics`. If the field is missing, the plan may not include canvas analytics — do not invent counts. See [Workflow analytics](/build-workflows/analytics).
+- After a graph PUT the server **prunes** `nodeStats` / `edgeStats` / `buttonStats` for ids no longer on the graph. New or renamed node ids have no stats until new executions. GET again before the next rewrite.
+
+### Infer starter vs reply
+
+| User intent | Trigger | First WhatsApp node |
+| --- | --- | --- |
+| Reply / keyword / inbound | `pingmeeTrigger` (`Messages Created`, `New Conversation Started`) | `messageType: "custom"` OK. Skip GET `/templates` unless the user named a template. |
+| Starter / outbound / API trigger | `workflowTrigger` | `messageType: "template"` + `templateType: "whatsapp"`. Copy an APPROVED object from [GET templates](/api-reference/business/get-templates) into `templateInformation`. |
+
+A pointer **child** with `workflowTrigger` that continues an inbound session may still use `custom`. Template is required for POST `/trigger`, campaign-style outbound, or any send outside the 24-hour window.
+
+## Common failures
+
+| Symptom | Cause |
+| --- | --- |
+| Workflow opens empty / nodes jump | `data.nodes` missing, or ids do not match `parsedData` |
+| Trigger never fires / run starts nowhere | Trigger left inside `parsedData`, or `trigger.connections.out[0]` missing |
+| Board looks right, runtime skips a branch | Parent has a root `out` edge but also sub-nodes — engine uses the sub-node `connections.out` only |
+| Button / true / false edge missing at runtime | Canvas used `sourceHandle: "out"` on a sub-node (must be `"in"`) |
+| If always takes false | Child `title` is not exactly `true` / `false` |
+| Switch always hits fallback | Conditions are on the parent `cases` only — runtime reads each `switchCaseEvaluation.data.conditions` |
+| **409** on PUT | Graph fields sent without the current `lastModified` |
+| Pointer does nothing | Child inactive, wrong `workflowId`, or child does not start with `workflowTrigger` |
+| Parent never continues after a pointer | `pointer.connections.out` is empty (resume target missing) |
+| Create “succeeds” but never runs | Forgot the activate PUT |
+| Send fails / wrong number | Missing `associatedToBusinessId`, or it is the WABA id instead of the phone-number `id` |
+| Meta rejects first outbound | Used `messageType: "custom"` on a **starter** (bot opens the thread) — need `template` + `templateType: "whatsapp"` and an APPROVED catalog template. Reply bots (`pingmeeTrigger`) may use `custom`. |
+| Template media broken | Blob URL in `templateInformation` — there is no public upload API; use a known `attachmentS3Id` or skip media |
+| Template send missing parameters | `{{n}}` in BODY / HEADER without matching `bodyVariables` / `headerVariables` keys |
+| HTTP / Task placeholder empty | `{{n}}` in the string but no matching key in `bodyVariables` / `titleVariables` |
+| `triggerData` expression is empty | Used the workflow id instead of the trigger node id, skipped the trigger with `startWithNodeId`, or the POST body key does not match |
+| Analytics missing on GET | Plan is not Expert AI — `analytics` is stripped. Do not invent counts. |
+| Stats do not match the canvas after PUT | Graph PUT pruned removed ids; renamed nodes start at zero until new runs. GET again. |
+| Expression empty after copy / paste | Copied `$oldNodeId.…` into a workflow whose trigger/node ids are different — rewrite `$` ids (and Fixed `parentId`s) |
+| Condition never matches | Invented Variable `parentId`, or `comparison` not one of the `ConditionType` strings (`"Equals"`, `"Is Empty"`, …) |
+
+## Do not send
+
+- `analytics`, `executionCount`, identifying `notes`
+- Deprecated `assignTags` / `assignAgents` (use `updateConversation`)
+- Sticky notes in `parsedData` (optional in `data` only)
+- Real customer names, phones, emails, CRM table names, agent ids, or other bots' `workflowId`s in examples you commit

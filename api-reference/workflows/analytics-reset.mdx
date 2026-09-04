@@ -1,0 +1,15 @@
+---
+title: 'Reset Workflow Analytics'
+openapi: 'POST /workflows/{workflowId}/analytics/reset'
+lastUpdatedDate: "2026-09-04"
+timestamp: true
+
+---
+
+Zeros every canvas analytics counter on this workflow (`totalStarted`, `totalCompleted`, `totalDropped`, `nodeStats`, `edgeStats`, `buttonStats`). URL-encode `workflowId` in the path. No request body.
+
+Requires the **Expert AI** plan (`403` otherwise) and the same Cookie + `x-api-key` as other Workflows calls.
+
+Destructive — only when the user explicitly asks. Returns the updated workflow document. Use the new `lastModified` on the next graph [PUT](/api-reference/workflows/update).
+
+How to **read** analytics (GET, not this endpoint) and change the graph: [Workflow analytics](/build-workflows/analytics).

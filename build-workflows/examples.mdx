@@ -1,0 +1,932 @@
+---
+title: 'Examples'
+description: 'Sanitized dual-graph patterns from real WorkflowsTable documents'
+---
+
+Each accordion is one pattern. Snippets are **generic**: names, phones, domains, template bodies, Fireberry fields, agent ids, and real workflow ids are replaced. Structure matches production graphs — node types, handle ids, `connections.out`, Variable `{ id, name, parentId, valueType }`, sub-node parenting, and pointer placeholders such as `"wf_child_support"`.
+
+<AccordionGroup>
+
+<Accordion title="Pingmee trigger + keywords">
+Reply bot: the customer messages first (`pingmeeTrigger` with `eventType: "Messages Created"` and a keyword gate). **No Meta template** — first WhatsApp node is `messageType: "custom"` with a BODY. Do not call [GET /templates](/api-reference/business/get-templates) unless the user named a catalog template. For a bot that **opens** the thread, see [Conversation opener](#conversation-opener-meta-template).
+
+**Canvas**
+
+```json
+{
+  "nodes": [
+    {
+      "id": "trig_1",
+      "type": "pingmeeTrigger",
+      "category": "Trigger",
+      "position": { "x": 80, "y": 80 },
+      "data": {
+        "eventType": "Messages Created",
+        "platform": "whatsapp",
+        "keywords": ["hello", "start"],
+        "isActive": true
+      }
+    },
+    {
+      "id": "wa_hello",
+      "type": "whatsapp",
+      "category": "Action",
+      "position": { "x": 320, "y": 80 },
+      "data": {
+        "platform": "whatsapp",
+        "type": "default",
+        "messageType": "custom",
+        "isActive": true,
+        "templateInformation": {
+          "components": [
+            { "type": "BODY", "text": "Hi, thanks for messaging us. How can we help?" }
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "trig_1",
+      "target": "wa_hello",
+      "sourceHandle": "out",
+      "targetHandle": "in",
+      "type": "buttonedge"
+    }
+  ]
+}
+```
+
+**Execution**
+
+```json
+{
+  "triggerType": "Messages Created",
+  "trigger": {
+    "id": "trig_1",
+    "type": "pingmeeTrigger",
+    "category": "Trigger",
+    "title": "pingmeeTrigger",
+    "data": {
+      "eventType": "Messages Created",
+      "platform": "whatsapp",
+      "keywords": ["hello", "start"]
+    },
+    "connections": { "out": ["wa_hello"] }
+  },
+  "parsedData": [
+    {
+      "id": "wa_hello",
+      "type": "whatsapp",
+      "category": "Action",
+      "title": "whatsapp",
+      "data": {
+        "platform": "whatsapp",
+        "type": "default",
+        "messageType": "custom",
+        "templateInformation": {
+          "components": [
+            { "type": "BODY", "text": "Hi, thanks for messaging us. How can we help?" }
+          ]
+        }
+      },
+      "connections": {},
+      "subNodes": []
+    }
+  ]
+}
+```
+</Accordion>
+
+<Accordion title="Conversation opener (Meta template)">
+The bot **starts** the thread (`workflowTrigger` + [POST /trigger](/api-reference/workflows/trigger)). This is a **starter**, so Meta requires an approved template. Fetch [GET /templates](/api-reference/business/get-templates) for the workflow’s `associatedToBusinessId`, copy one APPROVED object into `templateInformation`, set `messageType: "template"` **and** `templateType: "whatsapp"` (runtime keys off `templateType`). Bind `{{n}}` with `bodyVariables` / `headerVariables`. Reply bots (inbound `pingmeeTrigger`) use `messageType: "custom"` instead — [Pingmee trigger + keywords](#pingmee-trigger--keywords).
+
+Document fields (set on create): `associatedToBusinessId` = phone-number `id` from [GET /phone-numbers](/api-reference/business/get-phone-numbers), `platformType: "whatsapp"`.
+
+**Canvas**
+
+```json
+{
+  "nodes": [
+    {
+      "id": "trig_1",
+      "type": "workflowTrigger",
+      "category": "Trigger",
+      "position": { "x": 80, "y": 80 },
+      "data": { "isActive": true }
+    },
+    {
+      "id": "wa_open",
+      "type": "whatsapp",
+      "category": "Action",
+      "position": { "x": 320, "y": 80 },
+      "data": {
+        "platform": "whatsapp",
+        "type": "default",
+        "messageType": "template",
+        "templateType": "whatsapp",
+        "templateInformation": {
+          "id": "template_id_from_get",
+          "name": "welcome_opener",
+          "language": "en",
+          "category": "UTILITY",
+          "status": "APPROVED",
+          "allow_category_change": false,
+          "components": [
+            { "type": "BODY", "text": "Hello {{1}}, thanks for reaching out." }
+          ]
+        },
+        "bodyVariables": {
+          "1": {
+            "id": "var_cust_name",
+            "name": "customer.customerName",
+            "parentId": "trig_1",
+            "valueType": "string"
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_trig_1_wa_open",
+      "source": "trig_1",
+      "target": "wa_open",
+      "sourceHandle": "out",
+      "targetHandle": "in",
+      "type": "buttonedge"
+    }
+  ]
+}
+```
+
+**Execution**
+
+```json
+{
+  "associatedToBusinessId": "phone_number_id_example",
+  "platformType": "whatsapp",
+  "trigger": {
+    "id": "trig_1",
+    "type": "workflowTrigger",
+    "category": "Trigger",
+    "title": "workflowTrigger",
+    "data": { "isActive": true },
+    "connections": { "out": ["wa_open"] }
+  },
+  "parsedData": [
+    {
+      "id": "wa_open",
+      "type": "whatsapp",
+      "category": "Action",
+      "title": "whatsapp",
+      "data": {
+        "platform": "whatsapp",
+        "messageType": "template",
+        "templateType": "whatsapp",
+        "templateInformation": {
+          "id": "template_id_from_get",
+          "name": "welcome_opener",
+          "language": "en",
+          "category": "UTILITY",
+          "status": "APPROVED",
+          "allow_category_change": false,
+          "components": [
+            { "type": "BODY", "text": "Hello {{1}}, thanks for reaching out." }
+          ]
+        },
+        "bodyVariables": {
+          "1": {
+            "id": "var_cust_name",
+            "name": "customer.customerName",
+            "parentId": "trig_1",
+            "valueType": "string"
+          }
+        }
+      },
+      "connections": {},
+      "subNodes": []
+    }
+  ]
+}
+```
+
+A text HEADER with `{{1}}` uses `headerVariables` the same way. IMAGE / VIDEO / DOCUMENT headers are not available via API unless `attachmentS3Id` is already on the component. For `triggerData` bindings on the same shape, see [Workflow Trigger + triggerData](#workflow-trigger--triggerdata).
+</Accordion>
+
+<Accordion title="WhatsApp template parameters + answers">
+`bodyVariables` copy the trigger catalog. Answers are siblings on the canvas (`parentId`) and `subNodes` at runtime. Outgoing handle is `"in"`.
+
+**Canvas (trimmed)**
+
+```json
+{
+  "nodes": [
+    {
+      "id": "wa_menu",
+      "type": "whatsapp",
+      "parentId": null,
+      "data": {
+        "platform": "whatsapp",
+        "waitForUserResponse": true,
+        "messageType": "template",
+        "templateType": "whatsapp",
+        "templateInformation": {
+          "name": "welcome_menu_template",
+          "language": "en",
+          "components": [
+            { "type": "BODY", "text": "Hello {{1}}, choose an option." },
+            {
+              "type": "BUTTONS",
+              "buttons": [
+                { "type": "QUICK_REPLY", "text": "Tours" },
+                { "type": "QUICK_REPLY", "text": "Help" }
+              ]
+            }
+          ]
+        },
+        "bodyVariables": {
+          "1": {
+            "id": "var_cust_name",
+            "name": "customer.customerName",
+            "parentId": "trig_1",
+            "valueType": "string"
+          }
+        }
+      }
+    },
+    {
+      "id": "ans_tours",
+      "type": "answer",
+      "parentId": "wa_menu",
+      "data": { "label": "Tours", "index": 0, "editable": true, "removable": true }
+    },
+    {
+      "id": "ans_help",
+      "type": "answer",
+      "parentId": "wa_menu",
+      "data": { "label": "Help", "index": 1, "editable": true, "removable": true }
+    }
+  ],
+  "edges": [
+    {
+      "source": "ans_tours",
+      "target": "ptr_tours",
+      "sourceHandle": "in",
+      "targetHandle": "in",
+      "type": "buttonedge"
+    }
+  ]
+}
+```
+
+**Execution (that parent only)**
+
+```json
+{
+  "id": "wa_menu",
+  "type": "whatsapp",
+  "connections": {},
+  "subNodes": [
+    {
+      "id": "ans_tours",
+      "type": "answer",
+      "parentId": "wa_menu",
+      "title": "Tours",
+      "data": { "label": "Tours", "index": 0 },
+      "connections": { "out": ["ptr_tours"] }
+    },
+    {
+      "id": "ans_help",
+      "type": "answer",
+      "parentId": "wa_menu",
+      "title": "Help",
+      "data": { "label": "Help", "index": 1 },
+      "connections": { "out": ["ptr_support"] }
+    }
+  ]
+}
+```
+</Accordion>
+
+<Accordion title="Workflow Trigger + triggerData">
+Manual payload on a `workflowTrigger` (same output shape on `pingmeeTrigger` / social triggers). POST `{ "triggerData": { "websiteLink": "https://example.com" } }` then bind `return $trig_1.triggerData.websiteLink;` in a WhatsApp slot. The `$…` id is the trigger **node** id. See [`triggerData`](/build-workflows/variables#triggerdata).
+
+**Canvas**
+
+```json
+{
+  "nodes": [
+    {
+      "id": "trig_1",
+      "type": "workflowTrigger",
+      "category": "Trigger",
+      "position": { "x": 80, "y": 80 },
+      "data": { "isActive": true }
+    },
+    {
+      "id": "wa_link",
+      "type": "whatsapp",
+      "category": "Action",
+      "position": { "x": 320, "y": 80 },
+      "data": {
+        "platform": "whatsapp",
+        "messageType": "template",
+        "templateType": "whatsapp",
+        "templateInformation": {
+          "name": "welcome_link_template",
+          "language": "en",
+          "components": [
+            { "type": "BODY", "text": "Here is your link: {{1}}" }
+          ]
+        },
+        "bodyVariables": {
+          "1": {
+            "id": "expr_link",
+            "name": "websiteLink",
+            "parentId": "trig_1",
+            "valueType": "string",
+            "expression": "return $trig_1.triggerData.websiteLink;"
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "trig_1",
+      "target": "wa_link",
+      "sourceHandle": "out",
+      "targetHandle": "in",
+      "type": "buttonedge"
+    }
+  ]
+}
+```
+
+**Execution**
+
+```json
+{
+  "trigger": {
+    "id": "trig_1",
+    "type": "workflowTrigger",
+    "category": "Trigger",
+    "title": "workflowTrigger",
+    "data": { "isActive": true },
+    "connections": { "out": ["wa_link"] }
+  },
+  "parsedData": [
+    {
+      "id": "wa_link",
+      "type": "whatsapp",
+      "category": "Action",
+      "title": "whatsapp",
+      "data": {
+        "platform": "whatsapp",
+        "messageType": "template",
+        "templateType": "whatsapp",
+        "templateInformation": {
+          "name": "welcome_link_template",
+          "language": "en",
+          "components": [
+            { "type": "BODY", "text": "Here is your link: {{1}}" }
+          ]
+        },
+        "bodyVariables": {
+          "1": {
+            "id": "expr_link",
+            "name": "websiteLink",
+            "parentId": "trig_1",
+            "valueType": "string",
+            "expression": "return $trig_1.triggerData.websiteLink;"
+          }
+        }
+      },
+      "connections": {},
+      "subNodes": []
+    }
+  ]
+}
+```
+
+Then [POST /trigger](/api-reference/workflows/trigger):
+
+```json
+{
+  "phoneNumberId": "phone_number_id_example",
+  "customerPhoneNumberId": "customer_phone_id_example",
+  "triggerData": { "websiteLink": "https://example.com" }
+}
+```
+
+The same Expression works in an HTTP `bodyVariables` slot. Save both graphs, activate, then trigger.
+</Accordion>
+
+<Accordion title="If / Else">
+Parent holds `conditions`. Children titled `true` / `false`. Real booking bots use `"Is Empty"` on a trigger field (for example customer name) before an HTTP or Fireberry write.
+
+```json
+{
+  "id": "if_1",
+  "type": "if",
+  "category": "Condition",
+  "data": {
+    "evaluationMode": "ALL",
+    "conditions": [
+      {
+        "id": "c1",
+        "firstValue": {
+          "id": "var_cust_name",
+          "name": "customer.customerName",
+          "parentId": "trig_1",
+          "valueType": "string"
+        },
+        "comparison": "Is Empty"
+      }
+    ]
+  },
+  "connections": {},
+  "subNodes": [
+    {
+      "id": "ev_true",
+      "type": "conditionEvaluation",
+      "parentId": "if_1",
+      "title": "true",
+      "data": { "label": "true", "index": 0 },
+      "connections": { "out": ["upd_cust"] }
+    },
+    {
+      "id": "ev_false",
+      "type": "conditionEvaluation",
+      "parentId": "if_1",
+      "title": "false",
+      "data": { "label": "false", "index": 1 },
+      "connections": { "out": ["http_1"] }
+    }
+  ]
+}
+```
+
+Canvas edges from those children use `sourceHandle: "in"`.
+</Accordion>
+
+<Accordion title="Switch">
+Product-line bots switch on a catalog field, then pointer into a region workflow. Conditions sit on **each case child**.
+
+```json
+{
+  "id": "sw_1",
+  "type": "switch",
+  "connections": {},
+  "subNodes": [
+    {
+      "id": "case_bike",
+      "type": "switchCaseEvaluation",
+      "parentId": "sw_1",
+      "title": "Bikes",
+      "data": {
+        "label": "Bikes",
+        "evaluationMode": "ALL",
+        "conditions": [
+          {
+            "id": "c_bike",
+            "firstValue": {
+              "id": "var_interest",
+              "name": "message.type",
+              "parentId": "trig_1",
+              "valueType": "string"
+            },
+            "comparison": "Equals",
+            "secondValue": "bikes"
+          }
+        ]
+      },
+      "connections": { "out": ["ptr_bikes"] }
+    },
+    {
+      "id": "sw_fb",
+      "type": "noSelectionFallback",
+      "parentId": "sw_1",
+      "title": "Fallback",
+      "data": { "label": "Fallback" },
+      "connections": { "out": ["wa_default"] }
+    }
+  ]
+}
+```
+</Accordion>
+
+<Accordion title="HTTP request">
+Reminder and booking flows POST JSON with `{{1}}` bound to a trigger variable (often a campaign parameter expression).
+
+```json
+{
+  "id": "http_1",
+  "type": "httpRequest",
+  "category": "Action",
+  "data": {
+    "method": "POST",
+    "url": "https://api.example.com/leads",
+    "contentType": "application/json",
+    "body": "{\"name\":\"{{1}}\",\"phone\":\"{{2}}\"}",
+    "bodyVariables": {
+      "1": {
+        "id": "var_cust_name",
+        "name": "customer.customerName",
+        "parentId": "trig_1",
+        "valueType": "string"
+      },
+      "2": {
+        "id": "var_cust_phone",
+        "name": "customer.phoneNumber",
+        "parentId": "trig_1",
+        "valueType": "string"
+      }
+    }
+  },
+  "connections": { "out": ["upd_conv"] }
+}
+```
+
+Root canvas edge: `sourceHandle: "out"`.
+</Accordion>
+
+<Accordion title="Fireberry">
+Inbound bots create-or-update a CRM row keyed by phone. Table and field names below are generic stand-ins.
+
+```json
+{
+  "id": "crm_1",
+  "type": "fireberry",
+  "category": "Action",
+  "data": {
+    "action": "Create If None Exist",
+    "table": { "name": "Contacts", "objectType": "1" },
+    "objectField": { "fieldName": "telephone", "label": "Phone" },
+    "objectVariable": {
+      "id": "var_cust_phone",
+      "name": "customer.phoneNumber",
+      "parentId": "trig_1",
+      "valueType": "string"
+    },
+    "queries": [
+      {
+        "id": "q1",
+        "field": { "fieldName": "telephone", "label": "Phone" },
+        "value": {
+          "id": "var_cust_phone",
+          "name": "customer.phoneNumber",
+          "parentId": "trig_1",
+          "valueType": "string"
+        }
+      }
+    ]
+  },
+  "connections": { "out": ["wa_menu"] }
+}
+```
+
+Other `action` values seen: `"Create"`, `"Update Record"`.
+</Accordion>
+
+<Accordion title="Task">
+Region menus create a follow-up task, then pointer. Title uses `{{1}}`.
+
+```json
+{
+  "id": "task_1",
+  "type": "task",
+  "category": "Action",
+  "data": {
+    "task": {
+      "title": "Follow up {{1}}",
+      "body": "Lead asked about this product line.",
+      "statusCase": "open"
+    },
+    "titleVariables": {
+      "1": {
+        "id": "var_cust_name",
+        "name": "customer.customerName",
+        "parentId": "trig_1",
+        "valueType": "string"
+      }
+    }
+  },
+  "connections": { "out": ["ptr_region"] }
+}
+```
+</Accordion>
+
+<Accordion title="Wait">
+Used on long booking trees between a message and an `updateConversation`.
+
+```json
+{
+  "id": "wait_1",
+  "type": "wait",
+  "category": "Action",
+  "data": {
+    "timerInfo": {
+      "hours": "0",
+      "minutes": "15",
+      "seconds": "0",
+      "numberOfSeconds": 900
+    }
+  },
+  "connections": { "out": ["upd_conv"] }
+}
+```
+</Accordion>
+
+<Accordion title="Update conversation and customer">
+Follow-up and booking bots tag the thread, flip answer mode, and bind customer fields to the trigger catalog (not raw PII).
+
+```json
+{
+  "id": "upd_conv",
+  "type": "updateConversation",
+  "data": {
+    "answerMode": "manual",
+    "status": "open",
+    "selectedTags": [{ "id": "tag_new_lead", "name": "New lead" }],
+    "selectedAgents": [{ "id": "agent_example", "name": "Support agent" }]
+  },
+  "connections": { "out": ["upd_cust"] }
+}
+```
+
+```json
+{
+  "id": "upd_cust",
+  "type": "updateCustomer",
+  "data": {
+    "customerNickname": {
+      "id": "var_cust_name",
+      "name": "customer.customerName",
+      "parentId": "trig_1",
+      "valueType": "string"
+    },
+    "phoneNumber": {
+      "id": "var_cust_phone",
+      "name": "customer.phoneNumber",
+      "parentId": "trig_1",
+      "valueType": "string"
+    }
+  },
+  "connections": {}
+}
+```
+</Accordion>
+
+<Accordion title="AI">
+Reminder flows call `ai` after HTTP / Fireberry. Summarize publishes a `summary` output for later templates.
+
+```json
+{
+  "id": "ai_1",
+  "type": "ai",
+  "category": "Action",
+  "data": {
+    "aiOption": "summarizeConversation",
+    "variables": {
+      "var_summary": {
+        "id": "var_summary",
+        "name": "summary",
+        "parentId": "ai_1",
+        "valueType": "string"
+      }
+    }
+  },
+  "connections": { "out": ["wa_summary"] }
+}
+```
+
+`aiOption` may also be `"answerWithAI"` (no `summary` catalog).
+</Accordion>
+
+<Accordion title="Workflow pointer + workflowTrigger">
+Lead router: Pingmee trigger → menu answers → three pointers. Each child is a separate document that starts with `workflowTrigger` and is active.
+
+**Parent execution (trimmed)**
+
+```json
+{
+  "triggerType": "Messages Created",
+  "trigger": {
+    "id": "trig_1",
+    "type": "pingmeeTrigger",
+    "category": "Trigger",
+    "title": "pingmeeTrigger",
+    "data": { "eventType": "Messages Created", "platform": "whatsapp" },
+    "connections": { "out": ["wa_menu"] }
+  },
+  "parsedData": [
+    {
+      "id": "wa_menu",
+      "type": "whatsapp",
+      "connections": {},
+      "subNodes": [
+        {
+          "id": "ans_a",
+          "type": "answer",
+          "parentId": "wa_menu",
+          "title": "Option A",
+          "connections": { "out": ["ptr_a"] }
+        }
+      ]
+    },
+    {
+      "id": "ptr_a",
+      "type": "workflowPointer",
+      "category": "Operation",
+      "title": "workflowPointer",
+      "data": {
+        "workflowId": "wf_child_support",
+        "workflowName": "Child support",
+        "workflowFolderId": "folder_main"
+      },
+      "connections": { "out": ["upd_conv"] }
+    }
+  ]
+}
+```
+
+**Child execution**
+
+```json
+{
+  "id": "wf_child_support",
+  "isActive": true,
+  "trigger": {
+    "id": "trig_child",
+    "type": "workflowTrigger",
+    "category": "Trigger",
+    "title": "workflowTrigger",
+    "data": { "isActive": true },
+    "connections": { "out": ["wa_hello"] }
+  },
+  "parsedData": [
+    {
+      "id": "wa_hello",
+      "type": "whatsapp",
+      "title": "whatsapp",
+      "data": { "platform": "whatsapp" },
+      "connections": {},
+      "subNodes": []
+    }
+  ]
+}
+```
+
+Parent canvas edges: trigger `out` → menu; answer `in` → pointer. After the child finishes, parent resumes at `upd_conv`.
+</Accordion>
+
+<Accordion title="Complex: parameters AND a pointer">
+Landing-style child: `workflowTrigger` → WhatsApp with **expression** parameters from [`triggerData`](/build-workflows/variables#triggerdata) → answers → Fireberry → pointer to a shared closer. Also shows `settings.sharedTimeout`. This is the shape to copy when you need both bindings and a sub-workflow. For the payload-only pattern, see [Workflow Trigger + triggerData](#workflow-trigger--triggerdata).
+
+**Document (trimmed)**
+
+```json
+{
+  "id": "wf_landing",
+  "name": "Landing",
+  "folderId": "folder_main",
+  "associatedToBusinessId": "phone_number_id_example",
+  "platformType": "whatsapp",
+  "variables": {},
+  "isActive": true,
+  "settings": {
+    "sharedTimeout": {
+      "enabled": true,
+      "workflowId": "wf_child_support",
+      "timerInfo": {
+        "hours": "3",
+        "minutes": "0",
+        "seconds": "0",
+        "numberOfSeconds": 10800
+      }
+    },
+    "sharedFallback": { "enabled": false }
+  },
+  "trigger": {
+    "id": "trig_land",
+    "type": "workflowTrigger",
+    "category": "Trigger",
+    "title": "workflowTrigger",
+    "data": { "isActive": true },
+    "connections": { "out": ["wa_offer"] }
+  },
+  "parsedData": [
+    {
+      "id": "wa_offer",
+      "type": "whatsapp",
+      "category": "Action",
+      "title": "whatsapp",
+      "data": {
+        "platform": "whatsapp",
+        "waitForUserResponse": true,
+        "messageType": "template",
+        "templateType": "whatsapp",
+        "templateInformation": {
+          "name": "welcome_menu_template",
+          "language": "en",
+          "components": [
+            { "type": "BODY", "text": "Hello {{1}}, see {{2}}." }
+          ]
+        },
+        "bodyVariables": {
+          "1": {
+            "id": "expr_name",
+            "name": "product_name",
+            "parentId": "trig_land",
+            "valueType": "string",
+            "expression": "return $trig_land.triggerData.product_name;"
+          },
+          "2": {
+            "id": "expr_link",
+            "name": "websiteLink",
+            "parentId": "trig_land",
+            "valueType": "string",
+            "expression": "return $trig_land.triggerData.websiteLink;"
+          }
+        }
+      },
+      "connections": {},
+      "subNodes": [
+        {
+          "id": "ans_yes",
+          "type": "answer",
+          "parentId": "wa_offer",
+          "title": "Book",
+          "data": { "label": "Book", "index": 0 },
+          "connections": { "out": ["crm_1"] }
+        },
+        {
+          "id": "ans_later",
+          "type": "answer",
+          "parentId": "wa_offer",
+          "title": "Later",
+          "data": { "label": "Later", "index": 1 },
+          "connections": { "out": ["ptr_followup"] }
+        }
+      ]
+    },
+    {
+      "id": "crm_1",
+      "type": "fireberry",
+      "title": "fireberry",
+      "data": {
+        "action": "Create If None Exist",
+        "table": { "name": "Contacts", "objectType": "1" },
+        "objectField": { "fieldName": "telephone", "label": "Phone" },
+        "objectVariable": {
+          "id": "var_cust_phone",
+          "name": "customer.phoneNumber",
+          "parentId": "trig_land",
+          "valueType": "string"
+        }
+      },
+      "connections": { "out": ["ptr_followup"] }
+    },
+    {
+      "id": "ptr_followup",
+      "type": "workflowPointer",
+      "category": "Operation",
+      "title": "workflowPointer",
+      "data": {
+        "workflowId": "wf_child_support",
+        "workflowName": "Child support",
+        "workflowFolderId": "folder_main"
+      },
+      "connections": {}
+    }
+  ]
+}
+```
+
+**Matching canvas edges**
+
+```json
+{
+  "nodes": [
+    { "id": "trig_land", "type": "workflowTrigger", "position": { "x": 80, "y": 80 }, "data": {} },
+    { "id": "wa_offer", "type": "whatsapp", "position": { "x": 320, "y": 80 }, "data": { "waitForUserResponse": true } },
+    { "id": "ans_yes", "type": "answer", "parentId": "wa_offer", "data": { "label": "Book", "index": 0 } },
+    { "id": "ans_later", "type": "answer", "parentId": "wa_offer", "data": { "label": "Later", "index": 1 } },
+    { "id": "crm_1", "type": "fireberry", "position": { "x": 560, "y": 40 }, "data": {} },
+    { "id": "ptr_followup", "type": "workflowPointer", "position": { "x": 800, "y": 80 }, "data": { "workflowId": "wf_child_support" } }
+  ],
+  "edges": [
+    { "source": "trig_land", "target": "wa_offer", "sourceHandle": "out", "targetHandle": "in", "type": "buttonedge" },
+    { "source": "ans_yes", "target": "crm_1", "sourceHandle": "in", "targetHandle": "in", "type": "buttonedge" },
+    { "source": "ans_later", "target": "ptr_followup", "sourceHandle": "in", "targetHandle": "in", "type": "buttonedge" },
+    { "source": "crm_1", "target": "ptr_followup", "sourceHandle": "out", "targetHandle": "in", "type": "buttonedge" }
+  ]
+}
+```
+
+`wf_child_support` must already be active and start with `workflowTrigger`. Save both graphs, then activate, then trigger — see [overview](/build-workflows/overview).
+</Accordion>
+
+</AccordionGroup>

@@ -1,0 +1,104 @@
+---
+title: 'Workflow analytics'
+description: 'Fetch canvas analytics from GET, interpret drop-off, then PUT graph changes'
+---
+
+An AI can **read** a workflow’s canvas analytics and **change the graph** from them. There is no separate analytics GET — counters live on the [GET workflow](/api-reference/workflows/get) document as `analytics`.
+
+## Fetch
+
+`GET https://workflows.pingmee.co.il/workflows/{workflowId}` (URL-encode the id). Same Cookie + `x-api-key` as other Workflows calls.
+
+`analytics` is present on the **Expert AI** plan. If the field is **missing**, do not invent numbers — tell the user the plan may not include canvas analytics. If it is present but `totalStarted` is `0`, there is nothing to analyze yet (new workflow or a reset).
+
+List (`POST /workflows`) returns minimal `{ id, name, folderId }` only — it does not include `analytics`.
+
+**GET a fresh document immediately before you edit.** A graph PUT prunes stats for removed node / edge / button ids. After you rewrite ids, old keys no longer match.
+
+## Shape
+
+```json
+{
+  "totalStarted": 120,
+  "totalCompleted": 48,
+  "totalDropped": 31,
+  "lastUpdated": 1770000000000,
+  "nodeStats": {
+    "trig_1": { "enteredCount": 120, "completedCount": 120, "exitedCount": 118 },
+    "wa_menu": { "enteredCount": 110, "completedCount": 90, "exitedCount": 85 },
+    "btn_book": { "enteredCount": 40, "completedCount": 0, "exitedCount": 40 }
+  },
+  "edgeStats": {
+    "trig_1->wa_menu:out": {
+      "sourceNodeId": "trig_1",
+      "targetNodeId": "wa_menu",
+      "sourceHandle": "out",
+      "traversalCount": 110
+    },
+    "btn_book->http_1:in": {
+      "sourceNodeId": "btn_book",
+      "targetNodeId": "http_1",
+      "sourceHandle": "in",
+      "traversalCount": 40
+    }
+  },
+  "buttonStats": {
+    "btn_book": {
+      "subNodeId": "btn_book",
+      "parentNodeId": "wa_menu",
+      "label": "Book",
+      "clickCount": 40
+    }
+  }
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `totalStarted` | Executions that began. |
+| `totalCompleted` | Executions that finished successfully. |
+| `totalDropped` | Executions that ended in failure or expiry (not success). |
+| `lastUpdated` | Optional. Epoch **milliseconds** of the last recorded event. |
+| `nodeStats[nodeId]` | `enteredCount` / `completedCount` / `exitedCount` for that canvas or sub-node id. |
+| `edgeStats[key]` | How often an edge ran. Key is `{source}->{target}` or `{source}->{target}:{sourceHandle}`. |
+| `buttonStats[subNodeId]` | WhatsApp **answer** sub-node clicks. Key is the answer id, not the parent message. |
+
+Still in progress: `max(0, totalStarted - totalCompleted - totalDropped)`.
+
+Conversion (what the board shows): `totalCompleted / totalStarted`.
+
+### Edge keys and `sourceHandle`
+
+Root outgoing edges use `sourceHandle: "out"`. Sub-node outgoing edges (answers, If `true`/`false`, switch cases, fallback) use `"in"`. Older runs may key a branch by the **sub-node id** instead of `"in"` — look up both `{source}->{target}:in` and `{source}->{target}:{sourceNodeId}`.
+
+If/Else and switch paths are **node + edge** stats on the branch sub-node, not `buttonStats`.
+
+### Buttons
+
+`buttonStats` maps to [answer sub-nodes](/build-workflows/sub-nodes). Compare `clickCount` among siblings that share `parentNodeId`. A click also increments the answer’s `nodeStats.enteredCount` and the parent’s `exitedCount`.
+
+## Interpret
+
+Use only fields that exist. Rank by counts; do not invent percentages the API does not store.
+
+| Signal | How to read it |
+| --- | --- |
+| Drop-off | High `totalStarted` vs low `totalCompleted`. Or a node with high `enteredCount` and low `completedCount` / `exitedCount`. |
+| Hottest / coldest nodes | Highest vs lowest `enteredCount` (or `enteredCount / totalStarted`). Cold nodes after a hot parent are skip / drop points. |
+| Edges | Low `traversalCount` vs the source node’s `enteredCount` means few people took that path. |
+| Buttons | Low `clickCount` vs siblings on the same parent — weak label or unused option. |
+
+## Act
+
+1. GET the workflow. Keep `analytics`, `lastModified`, `data`, `parsedData`, and `trigger`.
+2. If `analytics` is missing, stop (plan gating). If `totalStarted` is `0`, say there is no data yet.
+3. Propose concrete graph edits, for example: reroute or rewrite low-click buttons, add a fallback / timeout, change copy, split an If condition, or add a path after a drop-off node.
+4. [PUT](/api-reference/workflows/update) **both** `data` and `parsedData` plus `trigger` / `triggerType` / `variables`, echoing `lastModified`. On **409**, GET again and retry.
+5. If the workflow is inactive, activate with `PUT { "isActive": true }` only (no graph fields).
+6. Do **not** send `analytics` on PUT. The server prunes stats for node / edge / button ids that no longer exist on the new graph; totals stay. **New or renamed ids have no stats until new executions.**
+
+See [Hard rules](/build-workflows/rules) and [Canvas vs execution](/build-workflows/canvas-vs-execution).
+
+## Reset (optional)
+
+[POST /workflows/{workflowId}/analytics/reset](/api-reference/workflows/analytics-reset) zeros every counter. It is **destructive**. Call it only when the user explicitly asks. Expert AI only (`403` otherwise). The response is the updated workflow; use its `lastModified` on the next graph PUT.

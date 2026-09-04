@@ -1,7 +1,28 @@
 ---
 title: 'Get WhatsApp Templates'
 openapi: 'GET /templates'
-lastUpdatedDate: "2026-08-18"
+lastUpdatedDate: "2026-09-04"
 timestamp: true
 
 ---
+
+Approved Meta templates for one connected phone number. Required query params: `type=whatsapp` and `phoneNumberId` (the workflow’s `associatedToBusinessId`).
+
+**When to call this**
+
+- **Starter / outbound** — the bot **opens** the conversation (`workflowTrigger`, [POST /trigger](/api-reference/workflows/trigger), campaign-style send, or any send outside the 24-hour window).
+- The user asked for a **named** catalog template (even on a reply bot).
+
+**Skip this call** for inbound reply bots (`pingmeeTrigger` `Messages Created` / `New Conversation Started`, keyword router). Those use `messageType: "custom"` — infer intent on [Build a workflow](/build-workflows/overview#infer-starter-vs-reply).
+
+When you do fetch:
+
+1. Bind the phone first ([GET phone numbers](/api-reference/business/get-phone-numbers)).
+2. GET this list and keep `status === "APPROVED"`.
+3. Copy the template object into the WhatsApp node’s `templateInformation`.
+4. Set `messageType: "template"` and `templateType: "whatsapp"`.
+5. Bind BODY / text HEADER placeholders with `bodyVariables` / `headerVariables`.
+
+Skip templates whose HEADER `format` is IMAGE, VIDEO, or DOCUMENT unless `attachmentS3Id` is already on that component — there is no public upload API.
+
+Field mapping: [WhatsApp templates](/build-workflows/nodes-and-edges#whatsapp-templates).

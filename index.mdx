@@ -3,9 +3,14 @@ title: 'Introduction'
 description: 'Working with Pingmee Micro Services'
 ---
 
-<Card title="Workflow node documentation" icon="robot" href="/workflows-documentation">
-  Node catalog, triggers, actions, and board concepts live on [Workflow Docs](https://docs-workflows.pingmee.co.il/docs). See [Workflow node documentation](/workflows-documentation) for links and MCP setup.
-</Card>
+<CardGroup cols={2}>
+  <Card title="Build a workflow" icon="diagram-project" href="/build-workflows/overview">
+    JSON cookbook: dual graph, nodes, variables, sub-nodes, pointers. Author and save via this site’s MCP at [docs.pingmee.co.il/mcp](https://docs.pingmee.co.il/mcp).
+  </Card>
+  <Card title="Workflow board UI" icon="robot" href="/workflows-documentation">
+    Optional. Node catalog and board screens live on [Workflow Docs](https://docs-workflows.pingmee.co.il/docs). Not required to assemble or persist a workflow.
+  </Card>
+</CardGroup>
 
 <Note>
   When authenticating a request, you should send a <code>Cookie</code> header instead of an <code>Authorization</code> header.

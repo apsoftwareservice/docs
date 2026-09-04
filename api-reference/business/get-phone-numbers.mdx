@@ -1,7 +1,18 @@
 ---
 title: 'Get Phone Numbers'
 openapi: 'GET /phone-numbers'
-lastUpdatedDate: "2026-08-18"
+lastUpdatedDate: "2026-09-04"
 timestamp: true
 
 ---
+
+Connected WhatsApp (and Green-API) numbers for the authenticated business. Use this **before creating a workflow**.
+
+1. Call this endpoint.
+2. If `phoneNumbers` has more than one row, **ask the user** which number the bot should send from.
+3. Copy that row’s `id` into the workflow’s `associatedToBusinessId` and set `platformType` (`whatsapp` or `greenAPI`). Do **not** use `associatedBusinessId` (that is the WABA id).
+4. For a **starter** / outbound bot (or a named catalog template), pass the same `id` as `phoneNumberId` when [fetching templates](/api-reference/business/get-templates). Skip GET `/templates` for inbound reply bots unless the user named a template.
+
+See [Platform binding](/build-workflows/document#platform-binding).
+
+This list does **not** include Facebook pages or Instagram accounts. There is no public list-pages API.

@@ -1,0 +1,15 @@
+---
+title: 'Get Workflow'
+openapi: 'GET /workflows/{workflowId}'
+lastUpdatedDate: "2026-09-04"
+timestamp: true
+
+---
+
+Returns the **full** workflow document — not the minimal `{ id, name, folderId }` rows from [List workflows](/api-reference/workflows/get-minimal).
+
+The response includes canvas `data`, execution `parsedData`, `trigger`, `variables`, `settings`, `lastModified`, and (on the Expert AI plan) `analytics`. URL-encode `workflowId` in the path.
+
+If `analytics` is missing, the plan may not include canvas analytics — do not invent counts. How to interpret the object and PUT graph changes: [Workflow analytics](/build-workflows/analytics).
+
+To build or edit `data` / `parsedData`, read [Build workflows](/build-workflows/overview) first.

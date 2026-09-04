@@ -1,0 +1,25 @@
+---
+title: 'Create Workflow'
+openapi: 'POST /workflows/{workflowId}'
+lastUpdatedDate: "2026-09-04"
+timestamp: true
+
+---
+
+You supply `workflowId` in the path (URL-encode it). `folderId` is a **required** query parameter — create a folder first or reuse one from [List workflows](/api-reference/workflows/get-minimal).
+
+The body needs at least `name`. Also send `associatedToBusinessId` (phone-number `id` from [GET phone numbers](/api-reference/business/get-phone-numbers)) and `platformType`. You can also send a full graph (`data`, `parsedData`, `trigger`, `triggerType`, `variables`). The server always stores `isActive: false` and sets `associatedTo` from the Cookie.
+
+Returns `{ message, created, lastModified }`. Keep `lastModified` for later graph PUTs.
+
+<Note>
+Before building `data` or `parsedData`, read [Build workflows](/build-workflows/overview). Fetch phones, ask the user which number to bind, then **infer intent**: a WhatsApp **template** only if this bot **opens** the conversation; inbound reply bots use `messageType: "custom"`. An AI that only writes `data` will not run; one that only writes `parsedData` will not open correctly on the board.
+</Note>
+
+## Recommended save sequence
+
+1. Optional: [Create folder](/api-reference/workflows/create-folder) — `POST /folders/{id}` with `{ "name": "..." }`
+2. `POST /workflows/{workflowId}?folderId=...` with `name` and optional graph
+3. [Update workflow](/api-reference/workflows/update) — `PUT` `{ "isActive": true }` (no graph required)
+
+Graph PUTs must echo `lastModified` from this create response (or a later GET), or the API returns **409**.

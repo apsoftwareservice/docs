@@ -1,0 +1,17 @@
+---
+title: 'Create Folder'
+openapi: 'POST /folders/{id}'
+lastUpdatedDate: "2026-09-04"
+timestamp: true
+
+---
+
+Create a workflow folder so you can pass `folderId` when [creating a workflow](/api-reference/workflows/create). You supply `id` in the path (URL-encode it).
+
+```json
+{
+  "name": "Onboarding"
+}
+```
+
+You can skip this call and reuse a `folderId` from [List workflows](/api-reference/workflows/get-minimal).

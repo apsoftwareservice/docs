@@ -1,0 +1,263 @@
+---
+title: 'Variables and parameters'
+description: 'Fixed, Expression, and Custom bindings; output catalog, template slots, HTTP/Task placeholders, conditions, and triggerData'
+---
+
+Every parameter slot (WhatsApp template `{{n}}`, HTTP/Task placeholders, Fireberry fields, conditions) is **one of three JSON shapes**. The board picker has the same three tabs: **Fixed**, **Expression**, **Custom**.
+
+Runtime discriminators are `isCustomValue`, `isExpression`, and `isVariable` in `@pingmee/aws-sharedmodel` (`automations.ts`). Check **Custom first**: a Custom object also carries `id` / `name` / `parentId` / `valueType`, so `isVariable` would match it.
+
+`workflow.variables` is a top-level map and is usually `{}`.
+
+## Three ways to bind a parameter
+
+### Fixed — field from another node (`isVariable`)
+
+The value is an input of an upstream node. In the GUI, expand a node row (label plus a `#` badge of the last four characters of the node id, for example Workflow Trigger `#a5a8`) and pick a leaf from the tree.
+
+JSON is a `Variable`. `parentId` is the **upstream node id** that produced the value. `name` is the dotted path into that node's `output`. Downstream nodes **copy** that object. They do not invent a new parent.
+
+```json
+{
+  "id": "var_cust_name",
+  "name": "customer.customerName",
+  "parentId": "trig_1",
+  "valueType": "string"
+}
+```
+
+### Expression — JavaScript over node outputs (`isExpression`)
+
+The value is computed JS. Discriminator is `"expression"`. Runtime wraps the string in a function, so the body **must** `return`. Node outputs are referenced with `$` plus the **full node id**:
+
+```
+return $35ba498caa5a8.triggerData.websiteLink;
+```
+
+In the GUI, type `$` to autocomplete available parameters. Typing more characters filters the list. Suggestion labels show the last four characters of the node id; the inserted text is the full `$nodeId.path`.
+
+`parentId` / `name` on the Expression object are unused at runtime (resolution reads `$ids` in the body). The GUI often leaves them empty. Filling them in for readability is fine.
+
+<Warning>
+If you copy a node into a **different workflow**, every `$nodeId` in Expression bodies **must** be rewritten to ids that exist in the destination (usually the new trigger node's id). Stale `$oldId.triggerData…` does not resolve.
+</Warning>
+
+[`triggerData`](#triggerdata) is the usual Expression example: keys from [POST `/trigger`](/api-reference/workflows/trigger) are not in the board catalog, so you cannot pick them as Fixed.
+
+### Custom — static text (`isCustomValue`)
+
+A literal string. Discriminator is `"custom"`. The GUI is a free-text field (for example `www.pingmee.co.il`). Runtime returns `custom` as-is.
+
+```json
+{
+  "id": "cust_site",
+  "name": "",
+  "parentId": "",
+  "valueType": "string",
+  "custom": "www.pingmee.co.il"
+}
+```
+
+## Compact examples
+
+Same three objects work in a WhatsApp `bodyVariables` slot, an HTTP `bodyVariables` / `titleVariables` slot, and a Fireberry `objectVariable` or `queries[].value`.
+
+**Fixed** — catalog field from the trigger:
+
+```json
+{
+  "bodyVariables": {
+    "1": {
+      "id": "var_cust_name",
+      "name": "customer.customerName",
+      "parentId": "trig_1",
+      "valueType": "string"
+    }
+  }
+}
+```
+
+**Expression** — `triggerData` key (HTTP `body` / Fireberry field: same object):
+
+```json
+{
+  "bodyVariables": {
+    "1": {
+      "id": "expr_link",
+      "name": "",
+      "parentId": "",
+      "valueType": "string",
+      "expression": "return $trig_1.triggerData.websiteLink;"
+    }
+  }
+}
+```
+
+**Custom** — literal (Fireberry `objectVariable` shown; a WhatsApp slot is the same object under `"1"`):
+
+```json
+{
+  "objectVariable": {
+    "id": "cust_site",
+    "name": "",
+    "parentId": "",
+    "valueType": "string",
+    "custom": "www.pingmee.co.il"
+  }
+}
+```
+
+| Mode | Discriminator | What runtime uses |
+| --- | --- | --- |
+| Fixed | `id`, `name`, `parentId`, `valueType` — no `expression`, no `custom` | `input[parentId].output` then `name` as a dotted path |
+| Expression | `"expression": "return $nodeId.path;"` | `$nodeId` inside the body (not the object's `parentId`) |
+| Custom | `"custom": "…"` | The `custom` string |
+
+## Output catalog — `node.data.variables`
+
+Triggers ship a tree generated from empty `customer` / `message` / `trigger` objects. Nested objects use `valueType: "Object"` and a nested `variables` map. That tree is what Fixed picks from.
+
+Typical trigger names (not an exhaustive dump):
+
+- `customer.customerName`, `customer.phoneNumber`, `customer.email`, `customer.customerNickname`
+- `message` (object) plus nested message fields
+- `trigger.platform`, `trigger.eventType`
+
+WhatsApp (and other message) nodes add a self output `{ name: "#<last-4-of-node-id>", parentId: <this node> }` and one entry per answer button (`name` = button label, `parentId` = message node).
+
+AI `summarizeConversation` exposes `{ name: "summary", parentId: <ai node id>, valueType: "string" }`.
+
+```json
+{
+  "variables": {
+    "var_cust": {
+      "id": "var_cust",
+      "name": "customer",
+      "parentId": "trig_1",
+      "valueType": "Object",
+      "variables": {
+        "var_cust_name": {
+          "id": "var_cust_name",
+          "name": "customer.customerName",
+          "parentId": "trig_1",
+          "valueType": "string"
+        }
+      }
+    }
+  }
+}
+```
+
+## Template slots
+
+On message nodes, numbered maps bind WhatsApp template placeholders:
+
+| Map | Keys |
+| --- | --- |
+| `bodyVariables` | `1`, `2`, … body `{{n}}` |
+| `headerVariables` | header placeholders |
+| `buttonVariables` | dynamic URL / action suffixes by button index |
+| `carouselVariables` | `` `${cardIndex}-body-${i}` `` or `` `${cardIndex}-${buttonIndex}` `` |
+
+Each value is Fixed, Expression, or Custom.
+
+## HTTP and Task `{{n}}`
+
+`httpRequest.data.body` and `task.task.title` / `task.task.body` use the same `{{1}}` syntax. Bindings live in `bodyVariables` and `titleVariables` (numeric keys). Each value is the same three shapes.
+
+```json
+{
+  "body": "{\"name\":\"{{1}}\"}",
+  "bodyVariables": {
+    "1": {
+      "id": "var_cust_name",
+      "name": "customer.customerName",
+      "parentId": "trig_1",
+      "valueType": "string"
+    }
+  }
+}
+```
+
+```json
+{
+  "task": {
+    "title": "Follow up {{1}}",
+    "body": "Lead asked about {{1}}",
+    "statusCase": "open"
+  },
+  "titleVariables": {
+    "1": {
+      "id": "var_cust_name",
+      "name": "customer.customerName",
+      "parentId": "trig_1",
+      "valueType": "string"
+    }
+  }
+}
+```
+
+## Conditions
+
+If / Switch case `firstValue` is typically Fixed. `secondValue` is often a raw string, not a parameter object.
+
+```json
+{
+  "id": "c1",
+  "firstValue": {
+    "id": "var_cust_name",
+    "name": "customer.customerName",
+    "parentId": "trig_1",
+    "valueType": "string"
+  },
+  "comparison": "Equals",
+  "secondValue": "VIP"
+}
+```
+
+`Is Empty` / `Is Not Empty` omit a useful `secondValue`. `Contains` uses `[{ "label": "hello" }]`.
+
+## triggerData
+
+`triggerData` is the JSON object you send when you start a run. The engine copies it onto the **trigger node's output**. Downstream fields (WhatsApp template slots, HTTP/Task `{{n}}`, conditions) read it with an **Expression**:
+
+```
+return $<triggerNodeId>.triggerData.<key>;
+```
+
+That `$…` id is the trigger **node's** `id`, not the workflow id. Real node ids are often hex strings:
+
+```
+return $35ba498caa5a8.triggerData.websiteLink;
+```
+
+### How it maps
+
+1. [POST `/workflows/{workflowId}/trigger`](/api-reference/workflows/trigger) with `"triggerData": { "websiteLink": "https://example.com" }`.
+2. The run starts at the workflow's trigger (`pingmeeTrigger`, `workflowTrigger`, `instagramTrigger`, or `facebookTrigger`).
+3. That node's execution output becomes `{ message, customer, triggerData }`.
+4. A WhatsApp or HTTP binding with `expression: "return $trig_1.triggerData.websiteLink;"` resolves to `"https://example.com"`.
+
+Keys are **not** declared on the trigger node. They are whatever you put on the incoming object. Nested objects work with more dots (`$trig_1.triggerData.order.id`). The board catalog (`node.data.variables`) is generated from empty `customer` / `message` / `trigger` shapes and does **not** include `triggerData` — that is why you use Expression instead of Fixed.
+
+You can also bind a Fixed Variable whose `name` is `triggerData.websiteLink` and `parentId` is the trigger node. Same output path; no `expression` field. Prefer the Expression form when you author graphs by API.
+
+### vs catalog Variables and `bodyVariables`
+
+| Kind | Catalog Fixed | `triggerData` Expression | Custom |
+| --- | --- | --- | --- |
+| Source | Trigger output fields the board already knows (`customer.customerName`, `message`, …) | Keys on the POST body | Literal string you typed |
+| Binding | `{ "name": "customer.customerName", "parentId": "trig_1" }` | Same Variable shape **plus** `"expression": "return $trig_1.triggerData.websiteLink;"` | `{ "custom": "www.pingmee.co.il" }` |
+| Template / HTTP / Fireberry slot | Put that object in the slot | Same | Same |
+
+`bodyVariables` is only the slot map (`"1"`, `"2"`, …). It does not invent payload keys.
+
+### Constraints
+
+- JSON **object** (not an array or string). Omit the field if you have no payload.
+- At most 32 768 bytes serialized, nesting depth at most 10.
+- The trigger node must actually run. `startWithNodeId` that skips the trigger does **not** seed `output.triggerData`.
+- A [workflow pointer](/build-workflows/sub-workflows) does **not** forward `triggerData` into the child. POST `/trigger` on the workflow you want the payload on (often a `workflowTrigger` child).
+- Copying the Expression into another workflow requires a new `$nodeId`. See [Hard rules](/build-workflows/rules).
+
+See a full dual-graph snippet in [Examples](/build-workflows/examples#workflow-trigger--triggerdata).

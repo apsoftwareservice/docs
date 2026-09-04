@@ -1,7 +1,31 @@
 ---
 title: 'Trigger Workflow'
 openapi: 'POST /workflows/{workflowId}/trigger'
-lastUpdatedDate: "2026-08-18"
+lastUpdatedDate: "2026-09-04"
 timestamp: true
 
 ---
+
+Manually start a bot workflow for a conversation. Path `workflowId` must be URL-encoded.
+
+Optional `triggerData` is a JSON **object** copied onto the trigger node's output. Downstream WhatsApp / HTTP / Task fields read it with an Expression. The `$…` id is the trigger **node** id, not the workflow id:
+
+```
+return $trig_1.triggerData.websiteLink;
+```
+
+```json
+{
+  "phoneNumberId": "phone_number_id_example",
+  "customerPhoneNumberId": "customer_phone_id_example",
+  "triggerData": {
+    "websiteLink": "https://example.com"
+  }
+}
+```
+
+Bind that expression in a template slot or HTTP `{{n}}` — see [`triggerData`](/build-workflows/variables#triggerdata) and a dual-graph snippet in [Examples](/build-workflows/examples#workflow-trigger--triggerdata).
+
+This call is a **starter**: it **opens** a conversation from the business side. The workflow’s first WhatsApp node must be `messageType: "template"` + `templateType: "whatsapp"` with an APPROVED catalog template — [WhatsApp templates](/build-workflows/nodes-and-edges#whatsapp-templates). (Inbound reply bots that use `pingmeeTrigger` do **not** go through this endpoint and may use `messageType: "custom"`.) `phoneNumberId` in the body should match the workflow’s `associatedToBusinessId`.
+
+`startWithNodeId` that skips the trigger does **not** seed `output.triggerData`. A [workflow pointer](/build-workflows/sub-workflows) does not forward this payload to the child — POST `/trigger` on the workflow that should receive it.

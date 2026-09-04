@@ -2017,51 +2017,50 @@
         }
       ],
       "get": {
-        "description": "Get business phone numbers",
+        "description": "List connected WhatsApp (and Green-API) phone numbers for the authenticated business. Call this before creating a workflow: if more than one number is returned, ask the user which one to bind. Copy the chosen row's `id` into the workflow `associatedToBusinessId` (not `associatedBusinessId`, which is the WABA id) and set `platformType`. For a starter/outbound bot (or a named catalog template), pass the same `id` as `phoneNumberId` on GET `/templates`. Skip GET `/templates` for inbound reply bots (`pingmeeTrigger`) unless the user named a template. Facebook pages and Instagram accounts are not in this list. See `/build-workflows/document` (platform binding) and `/build-workflows/overview`.",
         "responses": {
           "200": {
-            "description": "List of phone numbers",
+            "description": "Connected phone numbers",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "dbObject": {
+                    "phoneNumbers": {
                       "type": "array",
-                      "description": "Business phone numbers for the authenticated account.",
+                      "description": "Connected WhatsApp / Green-API numbers. Use `id` as workflow `associatedToBusinessId`.",
                       "items": {
                         "type": "object",
                         "properties": {
                           "id": {
                             "type": "string",
-                            "description": "Phone number ID"
+                            "description": "Phone-number id. Copy this into workflow `associatedToBusinessId` and into GET `/templates?phoneNumberId=`."
                           },
                           "verified_name": {
                             "type": "string",
-                            "description": "Verified business name"
+                            "description": "Verified business name. Show this when asking the user to pick a number."
                           },
                           "display_phone_number": {
                             "type": "string",
-                            "description": "Display phone number"
+                            "description": "Display phone number (human-readable). Not the workflow id."
+                          },
+                          "type": {
+                            "type": "string",
+                            "description": "`whatsapp` or `greenAPI`. Copy into workflow `platformType`."
+                          },
+                          "associatedBusinessId": {
+                            "type": "string",
+                            "description": "WhatsApp Business Account (WABA) id. Do not put this in `associatedToBusinessId`."
                           }
                         },
                         "additionalProperties": true
                       }
-                    },
-                    "hasMoreItemsToFetch": {
-                      "type": "boolean"
-                    },
-                    "lastEvaluatedKey": {
-                      "type": "object",
-                      "description": "Pagination cursor when more phone numbers exist.",
-                      "additionalProperties": true
                     }
                   },
                   "required": [
-                    "dbObject",
-                    "hasMoreItemsToFetch"
+                    "phoneNumbers"
                   ],
-                  "additionalProperties": false
+                  "additionalProperties": true
                 }
               }
             }
@@ -2081,14 +2080,14 @@
           "mcp": {
             "enabled": true,
             "name": "get-phone-numbers",
-            "description": "Get business phone numbers"
+            "description": "List connected WhatsApp phone numbers. Ask the user which number to bind, then set workflow associatedToBusinessId to the row id (not associatedBusinessId / WABA). Use that id as phoneNumberId on GET /templates only for starter/outbound bots or a named catalog template — not for inbound reply bots."
           }
         }
       }
     },
     "/templates": {
       "get": {
-        "description": "Get WhatsApp templates for a specific phone number",
+        "description": "List WhatsApp message templates for a connected phone number (`type=whatsapp` and `phoneNumberId` required). `phoneNumberId` is the workflow `associatedToBusinessId` (GET `/phone-numbers` row `id`). Call this for **starter/outbound** bots (`workflowTrigger`, POST `/workflows/{id}/trigger`, campaign-style send, or any send outside the 24-hour window), or when the user named a catalog template. Do **not** call this for inbound reply bots (`pingmeeTrigger` `Messages Created` / `New Conversation Started`) — those use `messageType: custom`. When you do fetch: pick an APPROVED template, copy it into the WhatsApp node's `templateInformation`, set `messageType: template` and `templateType: whatsapp`, and bind `bodyVariables` / `headerVariables`. Skip IMAGE / VIDEO / DOCUMENT header templates unless `attachmentS3Id` is already on the component — there is no public upload API. Infer intent: `/build-workflows/overview`. Field mapping: `/build-workflows/nodes-and-edges`.",
         "parameters": [
           {
             "name": "type",
@@ -2100,7 +2099,7 @@
                 "whatsapp"
               ]
             },
-            "description": "Template platform type"
+            "description": "Template platform type. Use `whatsapp` for Meta catalog templates."
           },
           {
             "name": "phoneNumberId",
@@ -2109,12 +2108,12 @@
             "schema": {
               "type": "string"
             },
-            "description": "Phone number ID to fetch templates for"
+            "description": "Phone-number id from GET `/phone-numbers` (workflow `associatedToBusinessId`). Do not use the WABA id."
           }
         ],
         "responses": {
           "200": {
-            "description": "List of templates",
+            "description": "WhatsApp templates (Meta catalog shape)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2124,18 +2123,38 @@
                     "properties": {
                       "id": {
                         "type": "string",
-                        "description": "Template ID"
+                        "description": "Template id. Copy into `templateInformation.id`."
                       },
                       "name": {
                         "type": "string",
-                        "description": "Template name"
+                        "description": "Template name. Copy into `templateInformation.name`. Do not invent this."
+                      },
+                      "language": {
+                        "type": "string",
+                        "description": "Template language code (for example `en`, `he`)."
+                      },
+                      "status": {
+                        "type": "string",
+                        "description": "Use only `APPROVED` templates when the bot opens a conversation (starter/outbound). Reply bots do not need this list."
+                      },
+                      "category": {
+                        "type": "string",
+                        "description": "Meta category such as `UTILITY`, `MARKETING`, or `AUTHENTICATION`."
+                      },
+                      "components": {
+                        "type": "array",
+                        "description": "HEADER / BODY / FOOTER / BUTTONS. Copy the array into `templateInformation.components`. Bind BODY `{{n}}` with `bodyVariables` and text HEADER `{{n}}` with `headerVariables`.",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
                       }
                     },
                     "required": [
                       "id",
                       "name"
                     ],
-                    "additionalProperties": false
+                    "additionalProperties": true
                   }
                 }
               }
@@ -2156,7 +2175,7 @@
           "mcp": {
             "enabled": true,
             "name": "get-templates",
-            "description": "Get WhatsApp templates for a specific phone number"
+            "description": "Get WhatsApp templates for a phone number (workflow associatedToBusinessId). Call only for starter/outbound bots or a named catalog template — not for inbound reply bots (pingmeeTrigger). When opening a conversation: copy APPROVED into templateInformation, set messageType template and templateType whatsapp, bind bodyVariables / headerVariables. No public media upload."
           }
         }
       },
@@ -2821,7 +2840,7 @@
         }
       ],
       "post": {
-        "description": "Returns the workflow data.",
+        "description": "List workflows (minimal).",
         "requestBody": {
           "description": "Request the minimal workflow dataset.",
           "content": {
@@ -2858,6 +2877,7 @@
                   "properties": {
                     "result": {
                       "type": "array",
+                      "description": "Minimal rows only: `id`, `name`, and `folderId`. Use GET /workflows/{workflowId} for the full document.",
                       "items": {
                         "$ref": "#/components/schemas/Workflow"
                       }
@@ -2902,20 +2922,227 @@
           "mcp": {
             "enabled": true,
             "name": "post-workflows",
-            "description": "Returns the workflow data."
+            "description": "List workflows (minimal)."
           }
         }
       }
     },
-    "/workflows/{workflowId}/trigger": {
+    "/workflows/{workflowId}": {
       "servers": [
         {
           "url": "https://workflows.pingmee.co.il",
           "description": "Workflows service"
         }
       ],
+      "get": {
+        "description": "Returns the full workflow document, including canvas `data`, execution `parsedData`, `trigger`, `variables`, `settings`, and (on the Expert AI plan) `analytics`. If `analytics` is omitted, the plan may not include canvas analytics — do not invent counts. There is no separate analytics GET. Path `workflowId` must be URL-encoded. See `/build-workflows/analytics`.",
+        "parameters": [
+          {
+            "name": "workflowId",
+            "in": "path",
+            "required": true,
+            "description": "Workflow identifier. Must be URL-encoded when used in the path.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full workflow document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workflow"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workflow not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-workflows-workflowId",
+            "description": "Returns the full workflow document, including canvas data, execution parsedData, trigger, variables, settings, and (Expert AI) analytics. If analytics is omitted, the plan may not include canvas analytics. Path workflowId must be URL-encoded."
+          }
+        }
+      },
       "post": {
-        "description": "Manually trigger a bot workflow for a conversation. Path `workflowId` must be URL-encoded.",
+        "description": "Create a workflow. Client supplies `workflowId` in the path (URL-encode it). Required query: `folderId`. Body requires `name`. Before saving, GET `/phone-numbers`, ask the user which number to bind, and set `associatedToBusinessId` to that row's `id` plus `platformType`. Infer intent: if the bot **opens** a WhatsApp conversation (starter/outbound, `workflowTrigger`, POST `/trigger`), GET `/templates` and use an APPROVED template on the first WhatsApp node; inbound reply bots (`pingmeeTrigger`) use `messageType: custom` and should not fetch templates unless the user named one. Graph fields (`data`, `parsedData`, `trigger`, `triggerType`, `variables`) are optional — you can send a full document. The server overwrites `id`, `associatedTo` (from the Cookie), `folderId`, `isActive` (always `false`), `created`, `lastModified`, `executionCount`, `lastExecution`, and `analytics`. Returns `{ message, created, lastModified }`.\n\nBefore building `data` / `parsedData`, read `/build-workflows/overview` and the related Build workflows cookbook pages. Recommended save sequence: optional POST `/folders/{id}` → POST this endpoint (name + phone ids + optional graph) → PUT `{ isActive: true }`. Graph PUTs must echo `lastModified`.",
+        "parameters": [
+          {
+            "name": "workflowId",
+            "in": "path",
+            "required": true,
+            "description": "Client-supplied workflow identifier. Must be URL-encoded when used in the path.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "folderId",
+            "in": "query",
+            "required": true,
+            "description": "Folder to place the workflow in. Create a folder with POST `/folders/{id}` or reuse `folderId` from the minimal list.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "At least `name`. Optionally include the full dual graph (`data`, `parsedData`, `trigger`, `triggerType`, `variables`) and other Workflow fields. `isActive` in the body is ignored — the server always stores `false`.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Workflow name."
+                  },
+                  "associatedToBusinessId": {
+                    "type": "string",
+                    "description": "WhatsApp phone-number id from GET `/phone-numbers` (row `id`, not `associatedBusinessId` / WABA). Required for WhatsApp send. Ask the user if more than one number exists."
+                  },
+                  "associatedToPlatformId": {
+                    "type": "string",
+                    "description": "Optional alias of the same phone-number / page id as `associatedToBusinessId`."
+                  },
+                  "platformType": {
+                    "type": "string",
+                    "description": "`whatsapp`, `facebookMessenger`, `instagram`, or `web`. Set on create together with `associatedToBusinessId`."
+                  },
+                  "triggerType": {
+                    "type": "string",
+                    "description": "Usually `trigger.data.eventType`. Trigger is not inside `parsedData`."
+                  },
+                  "trigger": {
+                    "$ref": "#/components/schemas/WorkflowNode"
+                  },
+                  "variables": {
+                    "type": "object",
+                    "description": "Workflow-level variable map. Usually `{}` unless set.",
+                    "additionalProperties": true
+                  },
+                  "data": {
+                    "$ref": "#/components/schemas/WorkflowCanvas"
+                  },
+                  "parsedData": {
+                    "type": "array",
+                    "description": "Execution graph: parent nodes only. Sub-nodes hang off `parent.subNodes[]`.",
+                    "items": {
+                      "$ref": "#/components/schemas/WorkflowNode"
+                    }
+                  },
+                  "settings": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Workflow created (always inactive)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message",
+                    "created",
+                    "lastModified"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Workflow 'wf_welcome' created."
+                    },
+                    "created": {
+                      "type": "integer",
+                      "description": "Unix timestamp (seconds)."
+                    },
+                    "lastModified": {
+                      "type": "integer",
+                      "description": "Unix timestamp (seconds). Echo this on later graph PUTs."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request (missing `folderId` or empty `name`)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-workflows-workflowId",
+            "description": "Create a workflow. Client supplies workflowId in the path (URL-encode it). Required query folderId. Body requires name. Fetch GET /phone-numbers first and set associatedToBusinessId to the chosen row id plus platformType. Infer intent: starter/outbound bots GET /templates and use an APPROVED WhatsApp template; inbound reply bots (pingmeeTrigger) use messageType custom and skip templates unless the user named one. Graph fields (data, parsedData, trigger, triggerType, variables) are optional; you can send a full document. Server forces isActive false and sets associatedTo from the Cookie. Returns { message, created, lastModified }. Before building data / parsedData, read /build-workflows/overview. Recommended save sequence: optional POST /folders/{id} → POST this endpoint (name + phone ids + optional graph) → PUT { isActive: true }. Graph PUTs must echo lastModified."
+          }
+        }
+      },
+      "put": {
+        "description": "Update a workflow. `name`, `isActive`, `settings`, and `associatedToBusinessId` can be sent alone — including `{ isActive: true }` to activate without sending a graph. If `data` or `parsedData` is present, this is a graph update: also send `trigger`, `triggerType`, `variables`, and `lastModified` from the last GET or create, or the API returns 409. Always send both `data` and `parsedData` plus `trigger` / `triggerType` on graph save. Do not send `analytics`. A graph PUT prunes stored analytics for node, edge, and button ids that are no longer on the graph — GET fresh analytics before rewriting.\n\nBefore building `data` / `parsedData`, read `/build-workflows/overview` and `/build-workflows/analytics`. Path `workflowId` must be URL-encoded.",
         "parameters": [
           {
             "name": "workflowId",
@@ -2928,7 +3155,258 @@
           }
         ],
         "requestBody": {
-          "description": "Conversation, optional node to start the workflow from, and optional JSON payload for the trigger.",
+          "required": true,
+          "description": "Partial update. Send only the fields you want to change. Graph updates (`data` or `parsedData` present) require `lastModified` from the last GET or create.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "description": "Set `true` to activate. Create always stores `false`; activate with a separate PUT `{ isActive: true }` (no graph required)."
+                  },
+                  "lastModified": {
+                    "type": "integer",
+                    "description": "Required when `data` or `parsedData` is present. Echo the value from the last GET or create, or the API returns 409."
+                  },
+                  "associatedToBusinessId": {
+                    "type": "string",
+                    "description": "WhatsApp phone-number id from GET `/phone-numbers` (row `id`). PUT can change this field without sending a graph."
+                  },
+                  "triggerType": {
+                    "type": "string"
+                  },
+                  "trigger": {
+                    "$ref": "#/components/schemas/WorkflowNode"
+                  },
+                  "variables": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "data": {
+                    "$ref": "#/components/schemas/WorkflowCanvas"
+                  },
+                  "parsedData": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/WorkflowNode"
+                    }
+                  },
+                  "settings": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Workflow updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message",
+                    "lastModified"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Workflow 'wf_welcome' updated successfully."
+                    },
+                    "lastModified": {
+                      "type": "integer",
+                      "description": "New Unix timestamp (seconds). Echo this on the next graph PUT."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workflow not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Optimistic lock conflict — workflow was updated elsewhere. Reload with GET and retry using the returned `lastModified`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Workflow was updated elsewhere. Reload and try again."
+                    },
+                    "lastModified": {
+                      "type": "integer",
+                      "description": "Current `lastModified` on the server."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "put-workflows-workflowId",
+            "description": "Update a workflow. name, isActive, settings, and associatedToBusinessId can be sent alone — including { isActive: true } to activate without sending a graph. If data or parsedData is present, send trigger, triggerType, variables, and lastModified from the last GET or create, or the API returns 409. Do not send analytics. A graph PUT prunes stored analytics for removed node, edge, and button ids. Path workflowId must be URL-encoded."
+          }
+        }
+      }
+    },
+    "/folders/{id}": {
+      "servers": [
+        {
+          "url": "https://workflows.pingmee.co.il",
+          "description": "Workflows service"
+        }
+      ],
+      "post": {
+        "description": "Create a workflow folder. Client supplies `id` in the path (URL-encode it). Body requires `{ name }`. Use this folder id as `folderId` when creating a workflow, or reuse `folderId` from POST `/workflows` (minimal list).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Client-supplied folder identifier. Must be URL-encoded when used in the path.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Folder display name.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Folder name."
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Folder created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Folder 'folder_onboarding' created."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing folder name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-folders-id",
+            "description": "Create a workflow folder. Client supplies id in the path (URL-encode it). Body requires { name }. Use the folder id as folderId when creating a workflow. You can also reuse folderId from POST /workflows (minimal list)."
+          }
+        }
+      }
+    },
+    "/workflows/{workflowId}/trigger": {
+      "servers": [
+        {
+          "url": "https://workflows.pingmee.co.il",
+          "description": "Workflows service"
+        }
+      ],
+      "post": {
+        "description": "Manually trigger a bot workflow for a conversation. This call is a **starter**: it opens the thread from the business side, so the workflow's first WhatsApp node must be `messageType: template` + `templateType: whatsapp` with an APPROVED catalog template. Optional body `triggerData` is copied onto the trigger node output and read with `return $<triggerNodeId>.triggerData.<key>;`. Path `workflowId` must be URL-encoded.",
+        "parameters": [
+          {
+            "name": "workflowId",
+            "in": "path",
+            "required": true,
+            "description": "Workflow identifier. Must be URL-encoded when used in the path.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Conversation, optional node to start from, and optional `triggerData` JSON copied onto the trigger node output.",
           "content": {
             "application/json": {
               "schema": {
@@ -2948,15 +3426,25 @@
                   },
                   "triggerData": {
                     "type": "object",
-                    "description": "Optional JSON object passed to the workflow when it is triggered.",
-                    "additionalProperties": true
+                    "description": "Optional JSON object copied onto the trigger node's output as `triggerData`. Downstream expressions read it as `return $<triggerNodeId>.triggerData.<key>;` (the `$…` id is the trigger node id, not the workflow id). Must be a JSON object (not an array), at most 32768 bytes, nesting depth at most 10. See Build workflows → Variables.",
+                    "additionalProperties": true,
+                    "example": {
+                      "websiteLink": "https://example.com"
+                    }
                   },
                   "startWithNodeId": {
                     "type": "string",
                     "description": "Optional workflow node identifier to start execution from."
                   }
                 },
-                "additionalProperties": false
+                "additionalProperties": false,
+                "example": {
+                  "phoneNumberId": "phone_number_id_example",
+                  "customerPhoneNumberId": "customer_phone_id_example",
+                  "triggerData": {
+                    "websiteLink": "https://example.com"
+                  }
+                }
               }
             }
           },
@@ -3008,7 +3496,84 @@
           "mcp": {
             "enabled": true,
             "name": "post-workflows-workflowId-trigger",
-            "description": "Manually trigger a bot workflow for a conversation. Path `workflowId` must be URL-encoded."
+            "description": "Manually trigger a bot workflow for a conversation (starter/outbound). First WhatsApp node must be messageType template + templateType whatsapp. Optional body triggerData is copied onto the trigger node output and read with return $<triggerNodeId>.triggerData.<key>;. Path workflowId must be URL-encoded."
+          }
+        }
+      }
+    },
+    "/workflows/{workflowId}/analytics/reset": {
+      "servers": [
+        {
+          "url": "https://workflows.pingmee.co.il",
+          "description": "Workflows service"
+        }
+      ],
+      "post": {
+        "description": "Zeros every canvas analytics counter on this workflow (`totalStarted`, `totalCompleted`, `totalDropped`, `nodeStats`, `edgeStats`, `buttonStats`). No request body. Requires the Expert AI plan (`403` otherwise). Destructive — call only when the user explicitly asks. Returns the updated workflow document. Use the new `lastModified` on the next graph PUT. Path `workflowId` must be URL-encoded. Same Cookie + `x-api-key` as other Workflows calls. See `/build-workflows/analytics`.",
+        "parameters": [
+          {
+            "name": "workflowId",
+            "in": "path",
+            "required": true,
+            "description": "Workflow identifier. Must be URL-encoded when used in the path.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated workflow with empty analytics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workflow"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Workflow analytics requires the Expert AI plan.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Workflow analytics requires the Expert AI plan."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workflow not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "post-workflows-workflowId-analytics-reset",
+            "description": "Zeros every canvas analytics counter on this workflow. No request body. Requires the Expert AI plan (403 otherwise). Destructive — call only when the user explicitly asks. Returns the updated workflow. Path workflowId must be URL-encoded."
           }
         }
       }
@@ -3956,6 +4521,116 @@
         },
         "additionalProperties": false
       },
+      "WorkflowNodeStats": {
+        "type": "object",
+        "description": "Per-node canvas counters. Keyed by node or sub-node id in `analytics.nodeStats`.",
+        "properties": {
+          "enteredCount": {
+            "type": "integer",
+            "description": "Times execution entered this node."
+          },
+          "completedCount": {
+            "type": "integer",
+            "description": "Times this node finished successfully."
+          },
+          "exitedCount": {
+            "type": "integer",
+            "description": "Times execution left this node via an outgoing edge (or a button click on a parent)."
+          }
+        },
+        "additionalProperties": false
+      },
+      "WorkflowEdgeStats": {
+        "type": "object",
+        "description": "Per-edge traversal counters. Map key is `{sourceNodeId}->{targetNodeId}` or `{sourceNodeId}->{targetNodeId}:{sourceHandle}`.",
+        "properties": {
+          "sourceNodeId": {
+            "type": "string"
+          },
+          "targetNodeId": {
+            "type": "string"
+          },
+          "sourceHandle": {
+            "type": "string",
+            "description": "Root outgoing edges use `out`. Sub-node outgoing edges (answers, If true/false, switch cases) use `in`. Older runs may store the sub-node id instead of `in`."
+          },
+          "traversalCount": {
+            "type": "integer",
+            "description": "Times this edge ran."
+          }
+        },
+        "additionalProperties": false
+      },
+      "WorkflowButtonStats": {
+        "type": "object",
+        "description": "WhatsApp answer sub-node clicks. Map key is the answer `subNodeId`, not the parent message id.",
+        "properties": {
+          "subNodeId": {
+            "type": "string",
+            "description": "Answer sub-node id."
+          },
+          "parentNodeId": {
+            "type": "string",
+            "description": "Parent WhatsApp (or similar) node id."
+          },
+          "label": {
+            "type": "string",
+            "description": "Button label as recorded at click time."
+          },
+          "clickCount": {
+            "type": "integer"
+          },
+          "payload": {
+            "type": "string",
+            "description": "Optional button payload recorded at click time."
+          }
+        },
+        "additionalProperties": false
+      },
+      "WorkflowAnalytics": {
+        "type": "object",
+        "description": "Canvas analytics on GET `/workflows/{workflowId}` (Expert AI plan). Omitted when the plan does not include canvas analytics — do not invent counts. Server-managed; do not send on PUT. A graph PUT prunes `nodeStats`, `edgeStats`, and `buttonStats` for ids no longer on the graph. See `/build-workflows/analytics`.",
+        "properties": {
+          "totalStarted": {
+            "type": "integer",
+            "description": "Executions that began."
+          },
+          "totalCompleted": {
+            "type": "integer",
+            "description": "Executions that finished successfully."
+          },
+          "totalDropped": {
+            "type": "integer",
+            "description": "Executions that ended in failure or expiry (not success)."
+          },
+          "lastUpdated": {
+            "type": "integer",
+            "description": "Optional. Epoch milliseconds of the last recorded analytics event."
+          },
+          "nodeStats": {
+            "type": "object",
+            "description": "Per-node counters keyed by node or sub-node id.",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/WorkflowNodeStats"
+            }
+          },
+          "edgeStats": {
+            "type": "object",
+            "description": "Per-edge counters. Key is `{source}->{target}` or `{source}->{target}:{sourceHandle}`.",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/WorkflowEdgeStats"
+            }
+          },
+          "buttonStats": {
+            "type": "object",
+            "description": "Answer-button clicks keyed by answer sub-node id. If/Else and switch paths are node+edge stats on the branch sub-node, not buttonStats.",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/WorkflowButtonStats"
+            }
+          }
+        },
+        "additionalProperties": true
+      },
       "Workflow": {
         "type": "object",
         "required": [
@@ -3970,9 +4645,233 @@
           "name": {
             "type": "string",
             "description": "Workflow name."
+          },
+          "folderId": {
+            "type": "string",
+            "description": "Folder this workflow belongs to."
+          },
+          "associatedTo": {
+            "type": "string",
+            "description": "Account id. Set by the server from the Cookie — do not invent this value."
+          },
+          "associatedToBusinessId": {
+            "type": "string",
+            "description": "WhatsApp phone-number id from GET `/phone-numbers` (row `id`, not the WABA `associatedBusinessId`) or Facebook page id. Required for WhatsApp send. See `/build-workflows/document`."
+          },
+          "associatedToPlatformId": {
+            "type": "string",
+            "description": "Optional alias of the same phone-number id or Facebook page id as `associatedToBusinessId`."
+          },
+          "platformType": {
+            "type": "string",
+            "description": "Platform this workflow is bound to (`whatsapp`, `facebookMessenger`, `instagram`, `web`). Set on create with `associatedToBusinessId`."
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the workflow runs. Create always stores `false`. Activate with PUT `{ isActive: true }`."
+          },
+          "created": {
+            "type": "integer",
+            "description": "Unix timestamp (seconds). Set by the server on create."
+          },
+          "lastModified": {
+            "type": "integer",
+            "description": "Unix timestamp (seconds). Echo this on graph PUTs or the API returns 409."
+          },
+          "triggerType": {
+            "type": "string",
+            "description": "Usually `trigger.data.eventType`. The trigger node is `workflow.trigger`, not inside `parsedData`."
+          },
+          "trigger": {
+            "$ref": "#/components/schemas/WorkflowNode"
+          },
+          "variables": {
+            "type": "object",
+            "description": "Workflow-level variable map. Usually `{}` unless set. Nested variable objects are loose — see `/build-workflows/variables`.",
+            "additionalProperties": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/WorkflowCanvas"
+          },
+          "parsedData": {
+            "type": "array",
+            "description": "Execution graph: parent nodes only. Sub-nodes hang off `parent.subNodes[]`. Runtime starts at `trigger.connections.out[0]`.",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowNode"
+            }
+          },
+          "settings": {
+            "type": "object",
+            "description": "Optional shared timeout / fallback and other workflow settings.",
+            "additionalProperties": true
+          },
+          "notes": {
+            "type": "string",
+            "description": "Manual notes or description."
+          },
+          "executionCount": {
+            "type": "integer",
+            "description": "Number of times the workflow has executed. Server-managed."
+          },
+          "lastExecution": {
+            "type": "integer",
+            "description": "Unix timestamp of the last execution. Server-managed."
+          },
+          "analytics": {
+            "$ref": "#/components/schemas/WorkflowAnalytics"
+          },
+          "selected": {
+            "type": "boolean",
+            "description": "Editor UI flag. Not required for API saves."
           }
         },
         "additionalProperties": false
+      },
+      "WorkflowCanvas": {
+        "type": "object",
+        "description": "React Flow canvas (`workflow.data` from `toObject()`). Required for the editor. Always send together with `parsedData` + `trigger` when saving a graph. Node form payloads are not fully specified here — read `/build-workflows/overview` before building `data`.",
+        "properties": {
+          "nodes": {
+            "type": "array",
+            "description": "Canvas nodes. Sub-nodes are siblings in this array (they have `parentId`), not nested.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "NodeType string, for example `pingmeeTrigger`, `whatsapp`, `if`."
+                },
+                "category": {
+                  "type": "string",
+                  "description": "`Trigger`, `Condition`, `Action`, `Operation`, `Note`, or `Answer`."
+                },
+                "position": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "parentId": {
+                  "type": "string",
+                  "description": "Set on sub-nodes. Sub-nodes are siblings in `data.nodes`, not nested."
+                },
+                "draggable": {
+                  "type": "boolean"
+                },
+                "selected": {
+                  "type": "boolean"
+                },
+                "data": {
+                  "type": "object",
+                  "description": "Node form payload. Shape depends on `type` — see `/build-workflows/overview`. Do not invent every field from this schema.",
+                  "additionalProperties": true
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowEdge"
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "WorkflowEdge": {
+        "type": "object",
+        "description": "React Flow edge. Copy every edge into execution `connections.out` with matching node ids (see `/build-workflows/canvas-vs-execution`). Root node output handle is `out`; input is `in`. Sub-node output handle is also `in` (downstream edges from a branch use `sourceHandle: \"in\"`). Type is usually `buttonedge`.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "description": "Source node id. Must match a `data.nodes[].id`."
+          },
+          "target": {
+            "type": "string",
+            "description": "Target node id. Must match a `data.nodes[].id`."
+          },
+          "sourceHandle": {
+            "type": "string",
+            "description": "Root output is `out`. Sub-node output is `in`."
+          },
+          "targetHandle": {
+            "type": "string",
+            "description": "Usually `in`."
+          },
+          "type": {
+            "type": "string",
+            "description": "Usually `buttonedge`."
+          }
+        },
+        "additionalProperties": true
+      },
+      "WorkflowNode": {
+        "type": "object",
+        "description": "Execution node used in `parsedData`, `trigger`, and `subNodes`. Branching is which sub-node's `connections.out` — there are no handle ids here. Node `data` is a loose object; read `/build-workflows/overview` before building it.",
+        "required": [
+          "id",
+          "type",
+          "category",
+          "data",
+          "connections"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "string",
+            "description": "Parent node id when this node is a sub-node."
+          },
+          "type": {
+            "type": "string",
+            "description": "NodeType string, for example `pingmeeTrigger`, `whatsapp`, `if`, `conditionEvaluation`."
+          },
+          "category": {
+            "type": "string",
+            "description": "`Trigger`, `Condition`, `Action`, `Operation`, `Note`, or `Answer`."
+          },
+          "title": {
+            "type": "string",
+            "description": "Used by the engine for some branches (If/Else matches `title.toLowerCase()` of `true` / `false`)."
+          },
+          "data": {
+            "type": "object",
+            "description": "Node form payload. Shape depends on `type` — see `/build-workflows/overview`.",
+            "additionalProperties": true
+          },
+          "connections": {
+            "type": "object",
+            "description": "Typically `{ out: string[] }` of target node ids. No handle ids.",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "subNodes": {
+            "type": "array",
+            "description": "Child branch nodes (answers, true/false, switch cases, fallback, timeout). Not used on canvas `data.nodes` — those are siblings with `parentId`.",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowNode"
+            }
+          }
+        },
+        "additionalProperties": true
       },
       "AIAgentRole": {
         "type": "object",

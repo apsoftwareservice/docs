@@ -1,0 +1,97 @@
+---
+title: 'Workflow document'
+description: 'Top-level fields on GET / POST / PUT /workflows/{workflowId}'
+---
+
+A workflow is a `BaseSubFolder` plus a dual graph. These keys appear on [GET /workflows/{workflowId}](/api-reference/workflows/get) and on create/update bodies.
+
+| Field | Role |
+| --- | --- |
+| `id` | Client-supplied on create (path). Server copies the path id. |
+| `name` | Required on create. Human title. |
+| `folderId` | Required on create as the `folderId` **query** param. |
+| `associatedTo` | Owner. **Server overwrites** from the Cookie. Do not invent it. |
+| `associatedToBusinessId` | **Required for WhatsApp send.** WhatsApp **phone-number id** (`GET /phone-numbers` item `id`) or Facebook page id. See [Platform binding](#platform-binding). |
+| `associatedToPlatformId` | Optional alias of the **same** id (phone-number id / page id). Runtime QR links fall back to this if `associatedToBusinessId` is blank. Prefer setting `associatedToBusinessId`. |
+| `platformType` | `whatsapp` \| `facebookMessenger` \| `instagram` \| `web` \| … Set this on **create** together with the phone id. PUT currently persists `associatedToBusinessId` but not `platformType`. |
+| `trigger` | Execution trigger node. **Not** inside `parsedData`. Runtime output can include `triggerData` from [POST /trigger](/api-reference/workflows/trigger) — see [Variables](/build-workflows/variables#triggerdata). |
+| `triggerType` | Copy of `trigger.data.eventType` (for example `"Messages Created"`). Often omitted on `workflowTrigger` children. |
+| `variables` | Workflow-level map. Usually `{}` unless you set bindings here. |
+| `data` | React Flow canvas: `{ nodes, edges, … }`. Required for the board. |
+| `parsedData` | Execution parents only (`WorkflowNode[]`). Required to run. |
+| `settings` | Optional `sharedTimeout` / `sharedFallback` (see [Sub-workflows](/build-workflows/sub-workflows)). |
+| `isActive` | Create always stores `false`. Activate with a separate PUT. |
+| `lastModified` | Unix seconds. Echo on graph PUT or get **409**. |
+| `created` | Unix seconds. Server-set on create. |
+| `analytics` | GET-only canvas counters (Expert AI). See [Workflow analytics](/build-workflows/analytics). |
+
+Omit `analytics`, `executionCount`, `lastExecution`, and customer-identifying `notes` when you author a graph.
+
+## What create overwrites
+
+`POST /workflows/{workflowId}?folderId=` spreads your body, then forces:
+
+```json
+{
+  "id": "<path workflowId>",
+  "associatedTo": "<from Cookie>",
+  "isActive": false,
+  "name": "<body.name>",
+  "folderId": "<query folderId>",
+  "created": 1770000000,
+  "lastModified": 1770000000,
+  "executionCount": 0,
+  "lastExecution": 0,
+  "notes": "",
+  "data": {}
+}
+```
+
+`data` stays as you sent it when present; otherwise `{}`. You **can** send `parsedData`, `trigger`, `triggerType`, `variables`, `settings`, `associatedToBusinessId`, `associatedToPlatformId`, and `platformType` on create (the duplicate-workflow path does this). The workflow still starts inactive.
+
+## Minimal create body
+
+```json
+{
+  "name": "Welcome menu",
+  "associatedToBusinessId": "phone_number_id_example",
+  "platformType": "whatsapp",
+  "variables": {},
+  "triggerType": "Messages Created",
+  "trigger": {},
+  "data": { "nodes": [], "edges": [] },
+  "parsedData": []
+}
+```
+
+Fill `trigger`, `data`, and `parsedData` using [Canvas vs execution](/build-workflows/canvas-vs-execution) before you activate.
+
+## Platform binding
+
+The board picker stores `associatedToBusinessId = selectablePlatform.id` and `platformType = selectablePlatform.type`. An AI must do the same: **fetch**, **ask if ambiguous**, **write the ids**.
+
+### WhatsApp (documented API)
+
+1. `GET https://business.pingmee.co.il/phone-numbers` — [Get phone numbers](/api-reference/business/get-phone-numbers).
+2. Response body is `{ "phoneNumbers": [ … ] }`. Each row includes:
+   - `id` — **this** is `associatedToBusinessId` (Meta phone-number id, not the display digits).
+   - `display_phone_number` / `verified_name` — show these to the user.
+   - `type` — `whatsapp` or `greenAPI`; copy into `platformType` (`greenAPI` workflows still use WhatsApp-shaped message nodes).
+   - `associatedBusinessId` — WABA id. **Do not** put this in `associatedToBusinessId`.
+3. If the array is empty, stop and tell the user to connect a WhatsApp number in Pingmee. If it has **more than one** row, ask which number this workflow should send from. Do not guess.
+4. If this is a **starter** / outbound bot (or the user named a catalog template), [GET templates](/api-reference/business/get-templates) uses `phoneNumberId=<that id>`. Fetch templates only **after** the phone is chosen. Skip GET `/templates` for inbound reply bots (`pingmeeTrigger`) unless the user asked for a named template.
+
+`associatedToPlatformId` is the same phone-number id when you set it. The GUI often omits it; `associatedToBusinessId` is enough.
+
+### Facebook / Instagram / web
+
+There is **no** public “list pages / list Instagram accounts” endpoint in this API. `GET /phone-numbers` is WhatsApp (and Green-API) only. For Messenger / Instagram, only set `associatedToBusinessId` to a page id the user already gave you. Do not invent a page id.
+
+## Graph vs metadata PUT
+
+| Body | `lastModified` |
+| --- | --- |
+| `name`, `isActive`, `settings`, and/or `associatedToBusinessId` only | Not required |
+| `data` or `parsedData` present | Required; must match the stored value |
+
+A graph PUT also writes `trigger`, `triggerType`, and `variables` from the body.

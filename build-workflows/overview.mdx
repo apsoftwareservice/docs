@@ -1,0 +1,78 @@
+---
+title: 'Build a workflow'
+description: 'Create a complex workflow graph and save it through the Workflows API'
+---
+
+This cookbook is for **AI agents and developers** who assemble a valid dual-graph payload and persist it with REST. One MCP is enough: [`https://docs.pingmee.co.il/mcp`](https://docs.pingmee.co.il/mcp) indexes these pages and the Workflows API.
+
+Board UI field catalogs live on [Workflow Docs](https://docs-workflows.pingmee.co.il/docs) and are **optional** for this path.
+
+## Goal
+
+Create a folder, save a workflow that has both a canvas graph (`data`) and an execution graph (`parsedData` + `trigger`), activate it, then trigger it. Bind WhatsApp / HTTP / Fireberry fields with [Fixed, Expression, or Custom](/build-workflows/variables) parameter objects.
+
+## Before you save (agents)
+
+Do these **before** POST/PUT. Skipping them produces a graph that opens on the board but does not send from the right number, fails Meta’s 24-hour rule on starter/outbound, or drops media.
+
+1. **Pick a phone / platform.** [GET phone numbers](/api-reference/business/get-phone-numbers) (`GET https://business.pingmee.co.il/phone-numbers`). If more than one number exists, **ask the user which one** to bind. Copy that item’s `id` into `associatedToBusinessId` and set `platformType` (`whatsapp` for those rows). Optional: set `associatedToPlatformId` to the same `id`. See [Workflow document](/build-workflows/document#platform-binding).
+2. **Infer intent — the first WhatsApp message is not always a template.** Decide from what the user asked for (table below). Do **not** force a Meta template on a reply bot. See [Nodes and edges](/build-workflows/nodes-and-edges#whatsapp-templates).
+3. **No media upload via this API.** There is **no public file-upload endpoint** for agents. GUI save uploads blob URLs to S3 (`attachmentS3Id`). Via REST, send **text or template body/buttons only**. Do not put blob/`https` upload URLs in `templateInformation`. If a catalog template requires an IMAGE / VIDEO / DOCUMENT header, skip it unless `components[].attachmentS3Id` is already known. See [Hard rules](/build-workflows/rules).
+4. **Wire both graphs.** Copy every canvas edge into `connections.out` with matching node ids. Root output handle is `"out"`; sub-node output handle is `"in"`. See [How to wire a graph](/build-workflows/canvas-vs-execution#how-to-wire-a-graph).
+
+### Infer starter vs reply
+
+| User intent | Trigger | First WhatsApp node |
+| --- | --- | --- |
+| Reply / keyword / inbound (“when a customer messages us…”) | `pingmeeTrigger` (`Messages Created`, `New Conversation Started`) | `messageType: "custom"` OK. Skip [GET templates](/api-reference/business/get-templates) unless the user named a specific template. |
+| Starter / outbound / “send this to customers” / API trigger | `workflowTrigger` | `messageType: "template"` + `templateType: "whatsapp"`. [GET templates](/api-reference/business/get-templates) for the chosen `phoneNumberId`, pick **APPROVED**, copy into `templateInformation`, bind `bodyVariables` / `headerVariables`. |
+
+A `workflowTrigger` **child** reached from a [pointer](/build-workflows/sub-workflows) during an inbound run is still in-session — `custom` is OK. Template is required when that trigger **starts** the thread ([POST /trigger](/api-reference/workflows/trigger), campaign-style, outside the 24-hour window).
+
+<Steps>
+<Step title="Optional — create a folder">
+`POST https://workflows.pingmee.co.il/folders/{folderId}` with `{ "name": "Inbound" }`. You supply `folderId`. Or reuse a `folderId` from [list workflows (minimal)](/api-reference/workflows/get-minimal).
+</Step>
+<Step title="Create the workflow">
+`POST https://workflows.pingmee.co.il/workflows/{workflowId}?folderId={folderId}` with at least `name`, `associatedToBusinessId`, and `platformType`. You may send the full graph in the same body. The server **always** stores `isActive: false` and sets `associatedTo` from the Cookie. Response includes `created` and `lastModified`.
+</Step>
+<Step title="PUT the graph if you did not send it on create">
+Send **both** `data` and `parsedData` plus `trigger` / `triggerType`. Echo `lastModified` from the last GET or create, or the API returns **409**.
+</Step>
+<Step title="Activate">
+`PUT /workflows/{workflowId}` with `{ "isActive": true }` only. No `lastModified` needed when you are not sending `data` or `parsedData`.
+</Step>
+<Step title="Trigger">
+[POST /workflows/{workflowId}/trigger](/api-reference/workflows/trigger). Optional body `triggerData` lands on the trigger node — read it with `return $<triggerNodeId>.triggerData.<key>;` ([Variables](/build-workflows/variables#triggerdata)). The child of a [workflow pointer](/build-workflows/sub-workflows) must already be **active** and start with `workflowTrigger`.
+</Step>
+<Step title="Optional — read analytics, then edit">
+After executions, [GET](/api-reference/workflows/get) the same document and read `analytics` (Expert AI). Interpret drop-off / buttons, then PUT a new graph. See [Workflow analytics](/build-workflows/analytics).
+</Step>
+</Steps>
+
+<Warning>
+An AI that writes only `data` will not run. An AI that writes only `parsedData` will not open correctly on the board. Always send both graphs with matching IDs. See [Canvas vs execution](/build-workflows/canvas-vs-execution).
+</Warning>
+
+## What to read next
+
+<CardGroup cols={2}>
+  <Card title="Document fields" href="/build-workflows/document" icon="file-lines">
+    Top-level Workflow keys and what the server overwrites
+  </Card>
+  <Card title="Dual graph" href="/build-workflows/canvas-vs-execution" icon="diagram-project">
+    React Flow `data` vs execution `parsedData` + `trigger`
+  </Card>
+  <Card title="Nodes and edges" href="/build-workflows/nodes-and-edges" icon="circle-nodes">
+    NodeType table, handles, required `data` keys
+  </Card>
+  <Card title="Examples" href="/build-workflows/examples" icon="code">
+    Sanitized dual-graph patterns, including triggerData + pointer
+  </Card>
+  <Card title="Analytics" href="/build-workflows/analytics" icon="chart-line">
+    GET `analytics`, interpret drop-off, PUT graph changes
+  </Card>
+  <Card title="Variables" href="/build-workflows/variables" icon="code-branch">
+    Parameter slots: Fixed (tree pick), Expression (`return $nodeId…`), Custom (`{ custom }`)
+  </Card>
+</CardGroup>

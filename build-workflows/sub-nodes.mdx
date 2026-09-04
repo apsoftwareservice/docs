@@ -1,0 +1,169 @@
+---
+title: 'Sub-nodes'
+description: 'Answers, true/false, switch cases, fallback, and timeout'
+---
+
+Sub-nodes are siblings on the canvas (`parentId`) and nested in execution (`parent.subNodes[]`). The parent’s main `out` handle is unused once sub-nodes exist — the engine follows the **chosen sub-node** `connections.out`.
+
+Canvas edges from a sub-node use `sourceHandle: "in"` (NestedSubNode quirk).
+
+## If / Else
+
+Parent `if` with exactly two `conditionEvaluation` children. The engine picks by `title.toLowerCase()`:
+
+| Child `title` | When |
+| --- | --- |
+| `true` | All parent `data.conditions` pass (runtime ANDs in order) |
+| `false` | Otherwise |
+
+```json
+{
+  "id": "if_1",
+  "type": "if",
+  "data": {
+    "evaluationMode": "ALL",
+    "conditions": [
+      {
+        "id": "c1",
+        "firstValue": { "id": "var_cust_name", "name": "customer.customerName", "parentId": "trig_1", "valueType": "string" },
+        "comparison": "Is Empty"
+      }
+    ]
+  },
+  "connections": {},
+  "subNodes": [
+    {
+      "id": "ev_true",
+      "type": "conditionEvaluation",
+      "parentId": "if_1",
+      "title": "true",
+      "data": { "label": "true", "editable": false, "index": 0 },
+      "connections": { "out": ["http_1"] }
+    },
+    {
+      "id": "ev_false",
+      "type": "conditionEvaluation",
+      "parentId": "if_1",
+      "title": "false",
+      "data": { "label": "false", "editable": false, "index": 1 },
+      "connections": { "out": ["wa_menu"] }
+    }
+  ]
+}
+```
+
+## Switch
+
+Children: `switchCaseEvaluation` (max 25) plus optional `noSelectionFallback`. **Conditions live on each case child** (`data.conditions`, `data.evaluationMode` `ALL` \| `ANY`). First matching case wins; otherwise fallback `connections.out`.
+
+```json
+{
+  "id": "sw_1",
+  "type": "switch",
+  "connections": {},
+  "subNodes": [
+    {
+      "id": "case_eu",
+      "type": "switchCaseEvaluation",
+      "parentId": "sw_1",
+      "title": "Europe",
+      "data": {
+        "label": "Europe",
+        "evaluationMode": "ALL",
+        "conditions": [
+          {
+            "id": "c_eu",
+            "firstValue": { "id": "var_region", "name": "customer.countryCode", "parentId": "trig_1", "valueType": "string" },
+            "comparison": "Equals",
+            "secondValue": "EU"
+          }
+        ]
+      },
+      "connections": { "out": ["ptr_europe"] }
+    },
+    {
+      "id": "sw_fb",
+      "type": "noSelectionFallback",
+      "parentId": "sw_1",
+      "title": "Fallback",
+      "data": { "label": "Fallback" },
+      "connections": { "out": ["wa_default"] }
+    }
+  ]
+}
+```
+
+## Message answers, fallback, timeout
+
+When `waitForUserResponse: true` on `whatsapp` / `facebookMessenger` / `instagram` / `webchat`:
+
+| Sub-node | Limit / notes |
+| --- | --- |
+| `answer` | WhatsApp max **10**, Messenger/Instagram **13**, webchat **8**. `label` is the quick-reply text. Optional `buttonPayload`, `carouselCardIndex`. |
+| `noSelectionFallback` | Unknown reply. Optional `shouldSendReplyMessage` + `unknownAnswerReplyMessage`. |
+| `awaitResponseTimeout` | `shouldTimeoutExecution: true` plus `timerInfo`. Handle is hidden unless timeout is enabled. |
+
+```json
+{
+  "id": "wa_menu",
+  "type": "whatsapp",
+  "data": { "platform": "whatsapp", "waitForUserResponse": true },
+  "connections": {},
+  "subNodes": [
+    {
+      "id": "ans_tours",
+      "type": "answer",
+      "parentId": "wa_menu",
+      "title": "Tours",
+      "data": { "label": "Tours", "index": 0, "editable": true, "removable": true },
+      "connections": { "out": ["ptr_tours"] }
+    },
+    {
+      "id": "ans_help",
+      "type": "answer",
+      "parentId": "wa_menu",
+      "title": "Help",
+      "data": { "label": "Help", "index": 1, "editable": true, "removable": true },
+      "connections": { "out": ["ptr_support"] }
+    },
+    {
+      "id": "fb_unknown",
+      "type": "noSelectionFallback",
+      "parentId": "wa_menu",
+      "title": "Fallback",
+      "data": {
+        "label": "Fallback",
+        "shouldSendReplyMessage": true,
+        "unknownAnswerReplyMessage": "Please choose one of the options."
+      },
+      "connections": { "out": ["wa_menu"] }
+    },
+    {
+      "id": "to_idle",
+      "type": "awaitResponseTimeout",
+      "parentId": "wa_menu",
+      "title": "Timeout",
+      "data": {
+        "label": "Timeout",
+        "shouldTimeoutExecution": true,
+        "timerInfo": { "hours": "0", "minutes": "30", "seconds": "0", "numberOfSeconds": 1800 }
+      },
+      "connections": { "out": ["upd_conv"] }
+    }
+  ]
+}
+```
+
+Matching canvas edges for the first answer:
+
+```json
+{
+  "source": "ans_tours",
+  "target": "ptr_tours",
+  "sourceHandle": "in",
+  "targetHandle": "in",
+  "type": "buttonedge"
+}
+```
+
+Workflow-level `settings.sharedTimeout` / `settings.sharedFallback` can stand in when a message node has no local timeout/fallback. See [Sub-workflows](/build-workflows/sub-workflows).
