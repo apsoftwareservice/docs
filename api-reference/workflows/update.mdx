@@ -20,7 +20,7 @@ Set `associatedToBusinessId` (and `platformType` on **create**) from [GET phone 
 
 ## Graph updates and optimistic lock
 
-If `data` or `parsedData` is present, this is a graph update. Also send `trigger`, `triggerType`, `variables`, and `lastModified` from the last [GET](/api-reference/workflows/get) or [create](/api-reference/workflows/create). Always send **both** `data` and `parsedData` plus `trigger` / `triggerType`.
+If `data` or `parsedData` is present, this is a graph update. Also send `trigger`, `triggerType`, `variables`, **`autoLayout: true`**, and `lastModified` from the last [GET](/api-reference/workflows/get) or [create](/api-reference/workflows/create). Always send **both** `data` and `parsedData` plus `trigger` / `triggerType`. `autoLayout` runs the board Clean (root dagre) and snaps sub-nodes; it is not stored.
 
 When `lastModified` does not match the server, the API returns **409** with the current `lastModified`. Reload and retry.
 

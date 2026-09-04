@@ -18,26 +18,35 @@ Do these **before** POST/PUT. Skipping them produces a graph that opens on the b
 1. **Pick a phone / platform.** [GET phone numbers](/api-reference/business/get-phone-numbers) (`GET https://business.pingmee.co.il/phone-numbers`). If more than one number exists, **ask the user which one** to bind. Copy that item’s `id` into `associatedToBusinessId` and set `platformType` (`whatsapp` for those rows). Optional: set `associatedToPlatformId` to the same `id`. See [Workflow document](/build-workflows/document#platform-binding).
 2. **Infer intent — the first WhatsApp message is not always a template.** Decide from what the user asked for (table below). Do **not** force a Meta template on a reply bot. See [Nodes and edges](/build-workflows/nodes-and-edges#whatsapp-templates).
 3. **No media upload via this API.** There is **no public file-upload endpoint** for agents. GUI save uploads blob URLs to S3 (`attachmentS3Id`). Via REST, send **text or template body/buttons only**. Do not put blob/`https` upload URLs in `templateInformation`. If a catalog template requires an IMAGE / VIDEO / DOCUMENT header, skip it unless `components[].attachmentS3Id` is already known. See [Hard rules](/build-workflows/rules).
-4. **Wire both graphs.** Copy every canvas edge into `connections.out` with matching node ids. Root output handle is `"out"`; sub-node output handle is `"in"`. See [How to wire a graph](/build-workflows/canvas-vs-execution#how-to-wire-a-graph).
+4. **Wire both graphs.** Copy every canvas edge into `connections.out` with matching node ids. Root output handle is `"out"`; sub-node output handle is `"in"`. Set `parentId` on buttons. Send **`autoLayout: true`** so the server Clean-layouts roots and snaps sub-nodes (`draggable: false`, `extent: "parent"`, relative x/y). Fallback never points at its parent. See [How to wire a graph](/build-workflows/canvas-vs-execution#how-to-wire-a-graph).
+
+### Which trigger
+
+| Use | Trigger |
+| --- | --- |
+| Listen for **customer message events** (keywords, new chat, tag/status change) | `pingmeeTrigger` |
+| This graph is a **sub-workflow**, a **“send this bot to a customer”** send, or a **campaign** / [POST `/trigger`](/api-reference/workflows/trigger) starter | `workflowTrigger` |
 
 ### Infer starter vs reply
 
 | User intent | Trigger | First WhatsApp node |
 | --- | --- | --- |
 | Reply / keyword / inbound (“when a customer messages us…”) | `pingmeeTrigger` (`Messages Created`, `New Conversation Started`) | `messageType: "custom"` OK. Skip [GET templates](/api-reference/business/get-templates) unless the user named a specific template. |
-| Starter / outbound / “send this to customers” / API trigger | `workflowTrigger` | `messageType: "template"` + `templateType: "whatsapp"`. [GET templates](/api-reference/business/get-templates) for the chosen `phoneNumberId`, pick **APPROVED**, copy into `templateInformation`, bind `bodyVariables` / `headerVariables`. |
+| Starter / outbound / “send this to customers” / campaign / API trigger | `workflowTrigger` | `messageType: "template"` + `templateType: "whatsapp"`. [GET templates](/api-reference/business/get-templates) for the chosen `phoneNumberId`, pick **APPROVED**, copy into `templateInformation`, bind `bodyVariables` / `headerVariables`. |
 
 A `workflowTrigger` **child** reached from a [pointer](/build-workflows/sub-workflows) during an inbound run is still in-session — `custom` is OK. Template is required when that trigger **starts** the thread ([POST /trigger](/api-reference/workflows/trigger), campaign-style, outside the 24-hour window).
+
+Use [conversation tags](/api-reference/tags/get-all) on `updateConversation.selectedTags` when the flow should mark a lead, trial, or handoff. **GET tags first** and copy an existing `{ id, title, color, associatedTo }` — do not invent ids. Create only if nothing matches: [PUT `/conversation/tags`](/api-reference/tags/create) with `{ "title", "color" }` (the server assigns `id` and `associatedTo`). There is no `POST /conversation/tags`.
 
 <Steps>
 <Step title="Optional — create a folder">
 `POST https://workflows.pingmee.co.il/folders/{folderId}` with `{ "name": "Inbound" }`. You supply `folderId`. Or reuse a `folderId` from [list workflows (minimal)](/api-reference/workflows/get-minimal).
 </Step>
 <Step title="Create the workflow">
-`POST https://workflows.pingmee.co.il/workflows/{workflowId}?folderId={folderId}` with at least `name`, `associatedToBusinessId`, and `platformType`. You may send the full graph in the same body. The server **always** stores `isActive: false` and sets `associatedTo` from the Cookie. Response includes `created` and `lastModified`.
+`POST https://workflows.pingmee.co.il/workflows/{workflowId}?folderId={folderId}` with at least `name`, `associatedToBusinessId`, and `platformType`. You may send the full graph in the same body. Include **`autoLayout: true`** whenever you send `data.nodes`. The server **always** stores `isActive: false` and sets `associatedTo` from the Cookie. Response includes `created` and `lastModified`.
 </Step>
 <Step title="PUT the graph if you did not send it on create">
-Send **both** `data` and `parsedData` plus `trigger` / `triggerType`. Echo `lastModified` from the last GET or create, or the API returns **409**.
+Send **both** `data` and `parsedData` plus `trigger` / `triggerType`, and **`autoLayout: true`**. Echo `lastModified` from the last GET or create, or the API returns **409**.
 </Step>
 <Step title="Activate">
 `PUT /workflows/{workflowId}` with `{ "isActive": true }` only. No `lastModified` needed when you are not sending `data` or `parsedData`.
@@ -51,7 +60,7 @@ After executions, [GET](/api-reference/workflows/get) the same document and read
 </Steps>
 
 <Warning>
-An AI that writes only `data` will not run. An AI that writes only `parsedData` will not open correctly on the board. Always send both graphs with matching IDs. See [Canvas vs execution](/build-workflows/canvas-vs-execution).
+An AI that writes only `data` will not run. An AI that writes only `parsedData` will not open correctly on the board. Always send both graphs with matching IDs, and `autoLayout: true` when you send `data.nodes`. See [Canvas vs execution](/build-workflows/canvas-vs-execution).
 </Warning>
 
 ## What to read next

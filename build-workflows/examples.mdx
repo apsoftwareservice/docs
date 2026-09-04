@@ -259,12 +259,18 @@ A text HEADER with `{{1}}` uses `headerVariables` the same way. IMAGE / VIDEO / 
       "id": "ans_tours",
       "type": "answer",
       "parentId": "wa_menu",
+      "draggable": false,
+      "extent": "parent",
+      "position": { "x": 138, "y": 120 },
       "data": { "label": "Tours", "index": 0, "editable": true, "removable": true }
     },
     {
       "id": "ans_help",
       "type": "answer",
       "parentId": "wa_menu",
+      "draggable": false,
+      "extent": "parent",
+      "position": { "x": 138, "y": 155 },
       "data": { "label": "Help", "index": 1, "editable": true, "removable": true }
     }
   ],
@@ -649,7 +655,12 @@ Follow-up and booking bots tag the thread, flip answer mode, and bind customer f
   "data": {
     "answerMode": "manual",
     "status": "open",
-    "selectedTags": [{ "id": "tag_new_lead", "name": "New lead" }],
+    "selectedTags": [{
+      "id": "tag_new_lead",
+      "title": "New lead",
+      "color": "#16A34A",
+      "associatedTo": "business@example.com"
+    }],
     "selectedAgents": [{ "id": "agent_example", "name": "Support agent" }]
   },
   "connections": { "out": ["upd_cust"] }

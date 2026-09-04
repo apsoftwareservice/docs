@@ -1,7 +1,11 @@
 ---
 title: 'Create Tag'
-openapi: 'POST /conversation/tags'
-lastUpdatedDate: "2026-08-18"
+openapi: 'PUT /conversation/tags'
+lastUpdatedDate: "2026-09-04"
 timestamp: true
 
 ---
+
+Create a workspace conversation tag. Body is `{ "title", "color" }`. The server assigns `id` and `associatedTo`. Duplicate `title` in the same workspace returns **400**.
+
+Copy the returned object into `updateConversation.selectedTags` — do not invent tag ids. Prefer [GET tags](/api-reference/tags/get-all) and reuse an existing tag when one already matches.

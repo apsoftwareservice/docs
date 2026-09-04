@@ -8,7 +8,7 @@ timestamp: true
 
 You supply `workflowId` in the path (URL-encode it). `folderId` is a **required** query parameter — create a folder first or reuse one from [List workflows](/api-reference/workflows/get-minimal).
 
-The body needs at least `name`. Also send `associatedToBusinessId` (phone-number `id` from [GET phone numbers](/api-reference/business/get-phone-numbers)) and `platformType`. You can also send a full graph (`data`, `parsedData`, `trigger`, `triggerType`, `variables`). The server always stores `isActive: false` and sets `associatedTo` from the Cookie.
+The body needs at least `name`. Also send `associatedToBusinessId` (phone-number `id` from [GET phone numbers](/api-reference/business/get-phone-numbers)) and `platformType`. You can also send a full graph (`data`, `parsedData`, `trigger`, `triggerType`, `variables`). When you send `data.nodes`, also send **`autoLayout: true`** so the server Clean-layouts roots and snaps button positions. The flag is not stored. The server always stores `isActive: false` and sets `associatedTo` from the Cookie.
 
 Returns `{ message, created, lastModified }`. Keep `lastModified` for later graph PUTs.
 

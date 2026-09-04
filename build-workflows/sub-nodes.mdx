@@ -100,7 +100,7 @@ When `waitForUserResponse: true` on `whatsapp` / `facebookMessenger` / `instagra
 | Sub-node | Limit / notes |
 | --- | --- |
 | `answer` | WhatsApp max **10**, Messenger/Instagram **13**, webchat **8**. `label` is the quick-reply text. Optional `buttonPayload`, `carouselCardIndex`. |
-| `noSelectionFallback` | Unknown reply. Optional `shouldSendReplyMessage` + `unknownAnswerReplyMessage`. |
+| `noSelectionFallback` | Unknown reply (typed text instead of a button). **Never** draw an edge from fallback back to its parent. Pick **one** of the two modes below. |
 | `awaitResponseTimeout` | `shouldTimeoutExecution: true` plus `timerInfo`. Handle is hidden unless timeout is enabled. |
 
 ```json
@@ -134,9 +134,9 @@ When `waitForUserResponse: true` on `whatsapp` / `facebookMessenger` / `instagra
       "data": {
         "label": "Fallback",
         "shouldSendReplyMessage": true,
-        "unknownAnswerReplyMessage": "Please choose one of the options."
+        "unknownAnswerReplyMessage": "Please select from the options."
       },
-      "connections": { "out": ["wa_menu"] }
+      "connections": {}
     },
     {
       "id": "to_idle",
@@ -154,7 +154,7 @@ When `waitForUserResponse: true` on `whatsapp` / `facebookMessenger` / `instagra
 }
 ```
 
-Matching canvas edges for the first answer:
+Matching canvas edges for the first answer (not for fallback mode A):
 
 ```json
 {
@@ -163,6 +163,28 @@ Matching canvas edges for the first answer:
   "sourceHandle": "in",
   "targetHandle": "in",
   "type": "buttonedge"
+}
+```
+
+### Fallback modes (never parent)
+
+**Never** put the parent message id on fallback `connections.out` or draw `fallback → parent`.
+
+| Mode | `shouldSendReplyMessage` | `connections.out` | Runtime |
+| --- | --- | --- | --- |
+| **A — prompt again** | `true` + `unknownAnswerReplyMessage` | `{}` / omit, **no** canvas edge | Sends that text, then **re-queues the same message node** (engine does this; you do not draw the loop) |
+| **B — branch away** | `false` or omit | Target a **different** node: human (`updateConversation` `answerMode: "manual"`), AI (`"ai"`), extra explanation, or [workflow pointer](/build-workflows/sub-workflows) | Follows that edge. If both A flags and `connections.out` are set, **A wins** and `connections.out` is ignored |
+
+Sub-node canvas fields: `draggable: false`, `extent: "parent"`, `position: { "x": 138, "y": 120 + 35 * index }` relative to the parent. Answers first, then fallback, then timeout. Prefer sending `autoLayout: true` on save so the server writes these fields.
+
+```json
+{
+  "id": "ans_tours",
+  "type": "answer",
+  "parentId": "wa_menu",
+  "draggable": false,
+  "extent": "parent",
+  "position": { "x": 138, "y": 120 }
 }
 ```
 

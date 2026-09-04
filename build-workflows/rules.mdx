@@ -13,7 +13,10 @@ description: 'Failures that look silent: 409, inactive child, missing parsedData
 - **Pick a phone before save.** [GET phone numbers](/api-reference/business/get-phone-numbers); if more than one, ask the user. Set `associatedToBusinessId` to that row’s `id` (not `associatedBusinessId` / WABA) and `platformType` on **create**. Optional `associatedToPlatformId` is the same id.
 - **Infer intent — do not force a template on reply bots.** The first WhatsApp node is a Meta template **only** when the bot **opens** the conversation. Use the table in [Infer starter vs reply](#infer-starter-vs-reply).
 - Copy **every** canvas edge into execution `connections.out` (same node ids). Root `sourceHandle` is `"out"`; sub-node `sourceHandle` is `"in"`; every `targetHandle` is `"in"`; edge `type` is `"buttonedge"`. See [How to wire a graph](/build-workflows/canvas-vs-execution#how-to-wire-a-graph).
-- Exactly **one** trigger node.
+- On every graph POST/PUT send **`autoLayout: true`**. The server Clean-layouts roots (dagre LR) and snaps sub-nodes (`draggable: false`, `extent: "parent"`, relative x/y). The flag is not stored. `parentId` on buttons is still required. Graph save also fills `data.subNodesConfig` on message / if / switch nodes so the board dashed **+** is visible.
+- **Fallback never edges back to its parent.** Mode A: auto-reply text + empty `connections.out`. Mode B: `connections.out` to a handoff / AI / pointer node. If `shouldSendReplyMessage` is true, runtime ignores fallback `connections.out`. See [Sub-nodes](/build-workflows/sub-nodes).
+- Use [conversation tags](/api-reference/tags/get-all) on `updateConversation.selectedTags` (`{ id, title, color, associatedTo }`) when the scenario needs them (lead, trial, escalate). GET existing tags; create with [PUT `/conversation/tags`](/api-reference/tags/create) `{ title, color }` only if none match.
+- Exactly **one** trigger node. `pingmeeTrigger` = listen for customer message events. `workflowTrigger` = sub-workflow, send-to-customer, or campaign / POST `/trigger`.
 - A [workflow pointer](/build-workflows/sub-workflows) target must exist, be **active**, and start with `workflowTrigger`.
 - Parameter slots are Fixed (`Variable`), Expression (`expression`), or Custom (`custom`). Check Custom first when reading JSON. See [Variables](/build-workflows/variables).
 - Copy Variable `parentId` from the producer node. Do not mint a new parent on a downstream binding.
@@ -37,6 +40,8 @@ A pointer **child** with `workflowTrigger` that continues an inbound session may
 
 | Symptom | Cause |
 | --- | --- |
+| Buttons sit in the wrong place / are independently draggable | Missing `parentId` or you omitted `autoLayout: true` on the graph save |
+| Fallback loops or re-enters the same message via an edge | Fallback `connections.out` pointed at the parent. Mode A has **no** edge (engine re-queues). Mode B must target a **different** node |
 | Workflow opens empty / nodes jump | `data.nodes` missing, or ids do not match `parsedData` |
 | Trigger never fires / run starts nowhere | Trigger left inside `parsedData`, or `trigger.connections.out[0]` missing |
 | Board looks right, runtime skips a branch | Parent has a root `out` edge but also sub-nodes — engine uses the sub-node `connections.out` only |

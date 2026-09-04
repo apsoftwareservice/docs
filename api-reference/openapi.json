@@ -58,14 +58,29 @@
           }
         }
       },
-      "post": {
-        "description": "Creates a new conversation tag",
+      "put": {
+        "description": "Creates a new conversation tag. Send `{ title, color }` only — the server assigns `id` and `associatedTo`. Duplicate title in the same workspace returns 400. There is no POST /conversation/tags.",
         "requestBody": {
-          "description": "Conversation tag to create",
+          "description": "Tag title and color",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ConversationTag"
+                "type": "object",
+                "required": [
+                  "title",
+                  "color"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "Human-readable tag title"
+                  },
+                  "color": {
+                    "type": "string",
+                    "description": "Tag color (hex, rgb, or named color)"
+                  }
+                },
+                "additionalProperties": false
               }
             }
           },
@@ -73,7 +88,7 @@
         },
         "responses": {
           "200": {
-            "description": "Conversation tag",
+            "description": "Conversation tag created",
             "content": {
               "application/json": {
                 "schema": {
@@ -83,7 +98,7 @@
             }
           },
           "400": {
-            "description": "unexpected error",
+            "description": "Missing title/color, or a tag with that title already exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -96,23 +111,8 @@
         "x-mint": {
           "mcp": {
             "enabled": true,
-            "name": "post-conversation-tags",
-            "description": "Creates a new conversation tag"
-          }
-        }
-      },
-      "put": {
-        "description": "Conversation tag created",
-        "responses": {
-          "201": {
-            "description": "Conversation tag created"
-          }
-        },
-        "x-mint": {
-          "mcp": {
-            "enabled": true,
             "name": "put-conversation-tags",
-            "description": "Conversation tag created"
+            "description": "Creates a new conversation tag. Body is title and color only; the server assigns id and associatedTo."
           }
         }
       }
@@ -2998,7 +2998,7 @@
         }
       },
       "post": {
-        "description": "Create a workflow. Client supplies `workflowId` in the path (URL-encode it). Required query: `folderId`. Body requires `name`. Before saving, GET `/phone-numbers`, ask the user which number to bind, and set `associatedToBusinessId` to that row's `id` plus `platformType`. Infer intent: if the bot **opens** a WhatsApp conversation (starter/outbound, `workflowTrigger`, POST `/trigger`), GET `/templates` and use an APPROVED template on the first WhatsApp node; inbound reply bots (`pingmeeTrigger`) use `messageType: custom` and should not fetch templates unless the user named one. Graph fields (`data`, `parsedData`, `trigger`, `triggerType`, `variables`) are optional — you can send a full document. The server overwrites `id`, `associatedTo` (from the Cookie), `folderId`, `isActive` (always `false`), `created`, `lastModified`, `executionCount`, `lastExecution`, and `analytics`. Returns `{ message, created, lastModified }`.\n\nBefore building `data` / `parsedData`, read `/build-workflows/overview` and the related Build workflows cookbook pages. Recommended save sequence: optional POST `/folders/{id}` → POST this endpoint (name + phone ids + optional graph) → PUT `{ isActive: true }`. Graph PUTs must echo `lastModified`.",
+        "description": "Create a workflow. Client supplies `workflowId` in the path (URL-encode it). Required query: `folderId`. Body requires `name`. Before saving, GET `/phone-numbers`, ask the user which number to bind, and set `associatedToBusinessId` to that row's `id` plus `platformType`. Infer intent: if the bot **opens** a WhatsApp conversation (starter/outbound, `workflowTrigger`, POST `/trigger`), GET `/templates` and use an APPROVED template on the first WhatsApp node; inbound reply bots (`pingmeeTrigger`) use `messageType: custom` and should not fetch templates unless the user named one. Graph fields (`data`, `parsedData`, `trigger`, `triggerType`, `variables`) are optional — you can send a full document. When sending `data.nodes`, also send `autoLayout: true` so the server Clean-layouts roots and snaps sub-nodes (flag is not stored). The server overwrites `id`, `associatedTo` (from the Cookie), `folderId`, `isActive` (always `false`), `created`, `lastModified`, `executionCount`, `lastExecution`, and `analytics`. Returns `{ message, created, lastModified }`.\n\nBefore building `data` / `parsedData`, read `/build-workflows/overview` and the related Build workflows cookbook pages. Recommended save sequence: optional POST `/folders/{id}` → POST this endpoint (name + phone ids + optional graph + autoLayout true) → PUT `{ isActive: true }`. Graph PUTs must echo `lastModified`.",
         "parameters": [
           {
             "name": "workflowId",
@@ -3021,7 +3021,7 @@
         ],
         "requestBody": {
           "required": true,
-          "description": "At least `name`. Optionally include the full dual graph (`data`, `parsedData`, `trigger`, `triggerType`, `variables`) and other Workflow fields. `isActive` in the body is ignored — the server always stores `false`.",
+          "description": "At least `name`. Optionally include the full dual graph (`data`, `parsedData`, `trigger`, `triggerType`, `variables`) and other Workflow fields. When sending `data.nodes`, also send `autoLayout: true`. `isActive` in the body is ignored — the server always stores `false`.",
           "content": {
             "application/json": {
               "schema": {
@@ -3060,6 +3060,10 @@
                   },
                   "data": {
                     "$ref": "#/components/schemas/WorkflowCanvas"
+                  },
+                  "autoLayout": {
+                    "type": "boolean",
+                    "description": "When true, the server runs board Clean (dagre LR on roots) and snaps sub-node positions (`draggable: false`, `extent: parent`, relative x/y). Request-only — not stored. Send whenever the body includes data.nodes. `autoClean` is an alias."
                   },
                   "parsedData": {
                     "type": "array",
@@ -3137,12 +3141,12 @@
           "mcp": {
             "enabled": true,
             "name": "post-workflows-workflowId",
-            "description": "Create a workflow. Client supplies workflowId in the path (URL-encode it). Required query folderId. Body requires name. Fetch GET /phone-numbers first and set associatedToBusinessId to the chosen row id plus platformType. Infer intent: starter/outbound bots GET /templates and use an APPROVED WhatsApp template; inbound reply bots (pingmeeTrigger) use messageType custom and skip templates unless the user named one. Graph fields (data, parsedData, trigger, triggerType, variables) are optional; you can send a full document. Server forces isActive false and sets associatedTo from the Cookie. Returns { message, created, lastModified }. Before building data / parsedData, read /build-workflows/overview. Recommended save sequence: optional POST /folders/{id} → POST this endpoint (name + phone ids + optional graph) → PUT { isActive: true }. Graph PUTs must echo lastModified."
+            "description": "Create a workflow. Client supplies workflowId in the path (URL-encode it). Required query folderId. Body requires name. Fetch GET /phone-numbers first and set associatedToBusinessId to the chosen row id plus platformType. Infer intent: starter/outbound bots GET /templates and use an APPROVED WhatsApp template; inbound reply bots (pingmeeTrigger) use messageType custom and skip templates unless the user named one. Graph fields (data, parsedData, trigger, triggerType, variables) are optional; you can send a full document. When sending data.nodes, also send autoLayout: true so the server Clean-layouts roots and snaps sub-nodes (not stored). Server forces isActive false and sets associatedTo from the Cookie. Returns { message, created, lastModified }. Before building data / parsedData, read /build-workflows/overview. Recommended save sequence: optional POST /folders/{id} → POST this endpoint (name + phone ids + optional graph + autoLayout true) → PUT { isActive: true }. Graph PUTs must echo lastModified."
           }
         }
       },
       "put": {
-        "description": "Update a workflow. `name`, `isActive`, `settings`, and `associatedToBusinessId` can be sent alone — including `{ isActive: true }` to activate without sending a graph. If `data` or `parsedData` is present, this is a graph update: also send `trigger`, `triggerType`, `variables`, and `lastModified` from the last GET or create, or the API returns 409. Always send both `data` and `parsedData` plus `trigger` / `triggerType` on graph save. Do not send `analytics`. A graph PUT prunes stored analytics for node, edge, and button ids that are no longer on the graph — GET fresh analytics before rewriting.\n\nBefore building `data` / `parsedData`, read `/build-workflows/overview` and `/build-workflows/analytics`. Path `workflowId` must be URL-encoded.",
+        "description": "Update a workflow. `name`, `isActive`, `settings`, and `associatedToBusinessId` can be sent alone — including `{ isActive: true }` to activate without sending a graph. If `data` or `parsedData` is present, this is a graph update: also send `trigger`, `triggerType`, `variables`, `autoLayout: true`, and `lastModified` from the last GET or create, or the API returns 409. Always send both `data` and `parsedData` plus `trigger` / `triggerType` on graph save. `autoLayout` runs board Clean and snaps sub-nodes; it is not stored. Do not send `analytics`. A graph PUT prunes stored analytics for node, edge, and button ids that are no longer on the graph — GET fresh analytics before rewriting.\n\nBefore building `data` / `parsedData`, read `/build-workflows/overview` and `/build-workflows/analytics`. Path `workflowId` must be URL-encoded.",
         "parameters": [
           {
             "name": "workflowId",
@@ -3156,7 +3160,7 @@
         ],
         "requestBody": {
           "required": true,
-          "description": "Partial update. Send only the fields you want to change. Graph updates (`data` or `parsedData` present) require `lastModified` from the last GET or create.",
+          "description": "Partial update. Send only the fields you want to change. Graph updates (`data` or `parsedData` present) require `lastModified` from the last GET or create and should include `autoLayout: true`.",
           "content": {
             "application/json": {
               "schema": {
@@ -3189,6 +3193,10 @@
                   },
                   "data": {
                     "$ref": "#/components/schemas/WorkflowCanvas"
+                  },
+                  "autoLayout": {
+                    "type": "boolean",
+                    "description": "When true, the server runs board Clean (dagre LR on roots) and snaps sub-node positions (`draggable: false`, `extent: parent`, relative x/y). Request-only — not stored. Send on every graph PUT. `autoClean` is an alias."
                   },
                   "parsedData": {
                     "type": "array",
@@ -3291,7 +3299,7 @@
           "mcp": {
             "enabled": true,
             "name": "put-workflows-workflowId",
-            "description": "Update a workflow. name, isActive, settings, and associatedToBusinessId can be sent alone — including { isActive: true } to activate without sending a graph. If data or parsedData is present, send trigger, triggerType, variables, and lastModified from the last GET or create, or the API returns 409. Do not send analytics. A graph PUT prunes stored analytics for removed node, edge, and button ids. Path workflowId must be URL-encoded."
+            "description": "Update a workflow. name, isActive, settings, and associatedToBusinessId can be sent alone — including { isActive: true } to activate without sending a graph. If data or parsedData is present, send trigger, triggerType, variables, autoLayout: true, and lastModified from the last GET or create, or the API returns 409. autoLayout runs board Clean and snaps sub-nodes and is not stored. Do not send analytics. A graph PUT prunes stored analytics for removed node, edge, and button ids. Path workflowId must be URL-encoded."
           }
         }
       }

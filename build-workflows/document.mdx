@@ -18,6 +18,7 @@ A workflow is a `BaseSubFolder` plus a dual graph. These keys appear on [GET /wo
 | `triggerType` | Copy of `trigger.data.eventType` (for example `"Messages Created"`). Often omitted on `workflowTrigger` children. |
 | `variables` | Workflow-level map. Usually `{}` unless you set bindings here. |
 | `data` | React Flow canvas: `{ nodes, edges, … }`. Required for the board. |
+| `autoLayout` | Request-only. `true` runs board Clean (root dagre) and snaps sub-node positions. Not stored. Send on every graph create/PUT. `autoClean` is an alias. |
 | `parsedData` | Execution parents only (`WorkflowNode[]`). Required to run. |
 | `settings` | Optional `sharedTimeout` / `sharedFallback` (see [Sub-workflows](/build-workflows/sub-workflows)). |
 | `isActive` | Create always stores `false`. Activate with a separate PUT. |

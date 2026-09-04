@@ -30,15 +30,26 @@ Root nodes:
 }
 ```
 
-Sub-nodes are **siblings** in `data.nodes`, not nested. They carry `parentId`:
+Sub-nodes are **siblings** in `data.nodes`, not nested. They carry `parentId`. Positions are **relative to the parent**, not canvas coordinates. They are **not draggable** — the parent moves them.
+
+### Layout via API (`autoLayout`)
+
+Send **`autoLayout: true`** on graph [create](/api-reference/workflows/create) and [PUT](/api-reference/workflows/update). The server runs the same two board operations and **does not store** the flag:
+
+1. **Sub-nodes** — `draggable: false`, `extent: "parent"`, `position.x = 138`, `position.y` from the GUI stack (answers, then fallback/timeout).
+2. **Roots** — dagre left-to-right (`ranksep` ~120, `nodesep` ~60), same as the board **Clean** button. Children keep the relative positions from step 1.
+
+Agents should still set `parentId` on buttons. You do **not** need to compute canvas x/y for roots or buttons. `autoClean: true` is accepted as an alias.
 
 ```json
 {
-  "id": "ans_tours",
-  "type": "answer",
-  "parentId": "wa_menu",
-  "position": { "x": 0, "y": 0 },
-  "data": { "label": "Tours", "index": 0, "editable": true, "removable": true }
+  "autoLayout": true,
+  "lastModified": 1770000000,
+  "data": { "nodes": [], "edges": [] },
+  "parsedData": [],
+  "trigger": {},
+  "triggerType": "Messages Created",
+  "variables": {}
 }
 ```
 
@@ -174,6 +185,13 @@ Every edge:
 ```
 
 Do **not** also draw a root `"out"` edge from a parent that has sub-nodes. The engine ignores parent `connections.out` once `subNodes` exist and continues from the **chosen** child’s `connections.out`.
+
+**Fallback must not point at its parent.** Never add a canvas edge `fallback → parent` and never put the parent id in fallback `connections.out`. Two modes (mutually exclusive — if `shouldSendReplyMessage` is true, runtime **ignores** `connections.out` and re-queues the same message node after sending the text):
+
+| Mode | JSON | When |
+| --- | --- | --- |
+| **A. Prompt again** | `shouldSendReplyMessage: true`, `unknownAnswerReplyMessage: "Please select from the options."`, `connections: {}`, **no** canvas edge | Customer typed instead of tapping a button |
+| **B. Branch away** | `shouldSendReplyMessage` omitted/false, `connections.out` to a **different** node (human handoff, `answerMode: "ai"`, another explanation, or a [workflow pointer](/build-workflows/sub-workflows)) | Escalate / switch channel of handling |
 
 ### 3. Copy each edge into execution
 

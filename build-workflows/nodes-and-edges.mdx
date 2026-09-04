@@ -96,7 +96,7 @@ Manual [POST `/trigger`](/api-reference/workflows/trigger) `triggerData` is copi
 
 | `type` | Required `data` keys | Fragment |
 | --- | --- | --- |
-| `whatsapp` | `platform: "whatsapp"` | Infer starter vs reply first ([WhatsApp templates](#whatsapp-templates)). `messageType`: `"custom"` \| `"template"` \| `"ai"`. Meta catalog send also needs `templateType: "whatsapp"`. Wait-for-reply: `waitForUserResponse: true` plus `answer` sub-nodes (max 10). **No public upload API** — text / template body only unless `attachmentS3Id` is already known. |
+| `whatsapp` | `platform: "whatsapp"` | Infer starter vs reply first ([WhatsApp templates](#whatsapp-templates)). `messageType`: `"custom"` \| `"template"` \| `"ai"`. Meta catalog send also needs `templateType: "whatsapp"`. Wait-for-reply: `waitForUserResponse: true` plus `answer` sub-nodes (max 10). Canvas also needs `data.subNodesConfig`: `{ "subNodeType": "answer", "editable": true, "nodesEditable": true, "nodesRemovable": true, "subNodesLimit": 10 }` or the dashed **+** under the card is hidden. Graph save fills this when missing. **No public upload API** — text / template body only unless `attachmentS3Id` is already known. |
 | `facebookMessenger` | `platform` | Same message shape. Answer limit 13. |
 | `instagram` | `platform` | Same message shape. Answer limit 13. |
 | `webchat` | `platform: "web"` | Same message shape. Answer limit 8. |
@@ -237,10 +237,10 @@ There is **no** documented public upload API for agents. The board uploads blob 
 
 | `type` | Parent | `data` keys |
 | --- | --- | --- |
-| `answer` | Message nodes | `label`, `index`, `editable`, `removable`. Optional `buttonPayload`, `carouselCardIndex`. |
-| `conditionEvaluation` | `if` | `label` / execution `title` must be `true` or `false`. |
-| `switchCaseEvaluation` | `switch` | `label`, `conditions`, `evaluationMode`. |
-| `noSelectionFallback` | Message or `switch` | `label` (often `"Fallback"`), optional `shouldSendReplyMessage`, `unknownAnswerReplyMessage`. |
+| `answer` | Message nodes | `label`, `index`, `editable`, `removable`. Canvas: `parentId`, `draggable: false`, `extent: "parent"` (send `autoLayout: true` to snap `{ x: 138, y }`). Optional `buttonPayload`, `carouselCardIndex`. |
+| `conditionEvaluation` | `if` | `label` / execution `title` must be `true` or `false`. Same canvas fields as answers (`draggable: false`, `extent: "parent"`). |
+| `switchCaseEvaluation` | `switch` | `label`, `conditions`, `evaluationMode`. Same canvas fields. |
+| `noSelectionFallback` | Message or `switch` | **Never** edge back to the parent. Mode A: `shouldSendReplyMessage` + `unknownAnswerReplyMessage`, empty `connections`. Mode B: `connections.out` to a different node (human / AI / pointer). |
 | `awaitResponseTimeout` | Message | `label` `"Timeout"`, `shouldTimeoutExecution`, `timerInfo`. |
 
 Full parenting rules: [Sub-nodes](/build-workflows/sub-nodes).
