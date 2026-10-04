@@ -2365,7 +2365,7 @@
     },
     "/getMessages": {
       "post": {
-        "description": "Fetches messages for a conversation identified by the business phone number and the customer (target) phone number. Results are ordered newest first. Omit `startKey` on the first request. For each following batch, set `startKey` to the `lastEvaluatedKey` value returned by the previous response.",
+        "description": "Fetches messages for a conversation identified by the business phone number and the customer (target) phone number. Results are ordered newest first. Omit `startKey` on the first request. For each following batch, set `startKey` to the `lastEvaluatedKey` value returned by the previous response. `resetConversationUnreadCount` defaults to false for API callers, so the unread count stays unchanged. The Pingmee app sends true by default and marks the conversation read.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2412,7 +2412,7 @@
           "mcp": {
             "enabled": true,
             "name": "post-getMessages",
-            "description": "Fetches messages for a conversation identified by the business phone number and the customer (target) phone number. Results are ordered newest first. Omit `startKey` on the first request. For each following batch, set `startKey` to the `lastEvaluatedKey` value returned by the previous response."
+            "description": "Fetches messages for a conversation identified by the business phone number and the customer (target) phone number. Results are ordered newest first. Omit `startKey` on the first request. For each following batch, set `startKey` to the `lastEvaluatedKey` value returned by the previous response. `resetConversationUnreadCount` defaults to false for API callers, so the unread count stays unchanged. The Pingmee app sends true by default and marks the conversation read."
           }
         }
       }
@@ -4467,6 +4467,11 @@
           },
           "startKey": {
             "$ref": "#/components/schemas/MessagesCursorKey"
+          },
+          "resetConversationUnreadCount": {
+            "type": "boolean",
+            "default": false,
+            "description": "Defaults to false on the API: omit it or send false and the unread count stays unchanged. The Pingmee app sends true by default, which clears the unread count and marks the conversation read."
           }
         },
         "additionalProperties": false

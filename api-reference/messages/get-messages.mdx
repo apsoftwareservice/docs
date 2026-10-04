@@ -1,11 +1,15 @@
 ---
 title: 'Get Messages'
 openapi: 'POST /getMessages'
-lastUpdatedDate: "2026-08-18"
+lastUpdatedDate: "2026-10-04"
 timestamp: true
 
 ---
 
 <Note>
   **Pagination:** For the first request, omit `startKey`. To fetch the next batch, take **`lastEvaluatedKey`** from the previous response and send it as **`startKey`** in the next request. That object has the shape `{ "messageId": "<string>", "createdAt": <number> }` (Unix time in milliseconds).
+</Note>
+
+<Note>
+  **Unread:** `resetConversationUnreadCount` is **false by default** on the API. Omit it or send `false` and the conversation stays unread. The Pingmee app sends **true by default**, which marks the conversation read.
 </Note>
