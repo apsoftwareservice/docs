@@ -2188,7 +2188,7 @@
     },
     "/sendMessage": {
       "post": {
-        "description": "Send a message",
+        "description": "Send a message. On WhatsApp, `mediaUrl` attaches a file: the server downloads it, uploads it to WhatsApp, and sends the message with the returned media id. Accepted types are images (jpg, jpeg, png), video (mp4, 3gp), audio (aac, m4a, mp3, amr, ogg, opus), and documents (txt, pdf, doc, docx, ppt, pptx, xls, xlsx). The URL file type and the downloaded Content-Type must both be in that list and must match. Any other type is rejected and the message is not sent.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2259,6 +2259,10 @@
                       }
                     },
                     "additionalProperties": false
+                  },
+                  "mediaUrl": {
+                    "type": "string",
+                    "description": "Public http(s) URL of a WhatsApp media file. `message` is the caption. Only supported when `messagePlatform` is `whatsapp`. Accepted URL types: images jpg, jpeg, png (image/jpeg, image/png); video mp4, 3gp (video/mp4, video/3gpp); audio aac, m4a, mp3, amr, ogg, opus (audio/aac, audio/mp4, audio/mpeg, audio/amr, audio/ogg, audio/opus); documents txt, pdf, doc, docx, ppt, pptx, xls, xlsx. The URL extension and the file Content-Type must be one of these and must match. A different type is rejected and the message is not sent."
                   },
                   "attachmentBase64": {
                     "type": "object",
